@@ -1,0 +1,17 @@
+<form [formGroup]="formGroup" (ngSubmit)="onSubmit()">
+  @for (field of formFields; track field.key) {
+  <app-form-field [field]="field" [form]="formGroup"></app-form-field>
+  }
+  <div class="actions">
+    @if (showCancel) {
+    <p-button
+      type="button"
+      label="Cancelar"
+      severity="secondary"
+      (click)="onCancel()"
+      (keydown)="onCancel()"
+    />
+    }
+    <p-button type="submit" [label]="labelSubmit" />
+  </div>
+</form>

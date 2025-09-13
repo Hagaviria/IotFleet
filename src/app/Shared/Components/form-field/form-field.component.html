@@ -1,0 +1,42 @@
+<div [formGroup]="form()" class="form-field">
+  <label [attr.for]="field().key" class="form-label">
+    {{ field().label }}
+  </label>
+
+  <div>
+    @let control = form().get(field().key)!; @switch (field().controlType) {
+    @case ('textbox') {
+    <input
+      pInputText
+      [formControlName]="field().key"
+      [id]="field().key"
+      [type]="field().type || 'text'"
+    />
+    } @case ('textarea') {
+    <textarea
+      pTextarea
+      [formControlName]="field().key"
+      [autoResize]="true"
+      [id]="field().key"
+      [rows]="field().rows || 3"
+    ></textarea>
+    } @case ('checkbox') {
+    <p-checkbox
+      [binary]="true"
+      [formControlName]="field().key"
+      [inputId]="field().key"
+    ></p-checkbox>
+
+    } } @if (control.invalid && (control.dirty || control.touched)) { @if
+    (control.errors?.['required']) {
+    <div class="required-label">{{ field().label }} es obligatorio</div>
+    } @if (control.errors?.['minLengthCustom']) {
+    <div class="required-label">
+      El título debe tener al menos
+      {{ control.errors?.['minLengthCustom']?.requiredLength }} caracteres
+    </div>
+    } @if (control.errors?.['projectNameExists']) {
+    <div class="required-label">Ya existe un proyecto con este nombre</div>
+    } }
+  </div>
+</div>
