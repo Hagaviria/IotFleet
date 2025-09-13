@@ -85,214 +85,28 @@
   <!-- Dialog para crear vehículo -->
   <p-dialog header="Crear Nuevo Vehículo" [(visible)]="showCreateDialog" [modal]="true" [style]="{ width: '600px' }"
     [closable]="true" [draggable]="false" [resizable]="false">
-    <form [formGroup]="createVehicleForm" (ngSubmit)="onCreateVehicle()">
-      <div class="grid">
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label for="licensePlate" class="block text-sm font-medium mb-2">
-              Placa <span class="text-red-500">*</span>
-            </label>
-            <input pInputText id="licensePlate" formControlName="licensePlate" placeholder="ABC-123" class="w-full"
-              [class.ng-invalid]="
-                createVehicleForm.get('licensePlate')?.invalid &&
-                createVehicleForm.get('licensePlate')?.touched
-              " />
-            @if (getFieldError(createVehicleForm, 'licensePlate')) {
-            <small class="text-red-500">{{
-              getFieldError(createVehicleForm, "licensePlate")
-              }}</small>
-            }
-          </div>
-        </div>
 
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label for="brand" class="block text-sm font-medium mb-2">
-              Marca <span class="text-red-500">*</span>
-            </label>
-            <input pInputText id="brand" formControlName="brand" placeholder="Mercedes" class="w-full"
-              [class.ng-invalid]="
-                createVehicleForm.get('brand')?.invalid &&
-                createVehicleForm.get('brand')?.touched
-              " />
-            @if (getFieldError(createVehicleForm, 'brand')) {
-            <small class="text-red-500">{{
-              getFieldError(createVehicleForm, "brand")
-              }}</small>
-            }
-          </div>
-        </div>
-
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label for="model" class="block text-sm font-medium mb-2">
-              Modelo <span class="text-red-500">*</span>
-            </label>
-            <input pInputText id="model" formControlName="model" placeholder="Sprinter" class="w-full"
-              [class.ng-invalid]="
-                createVehicleForm.get('model')?.invalid &&
-                createVehicleForm.get('model')?.touched
-              " />
-            @if (getFieldError(createVehicleForm, 'model')) {
-            <small class="text-red-500">{{
-              getFieldError(createVehicleForm, "model")
-              }}</small>
-            }
-          </div>
-        </div>
-
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label for="fuelCapacity" class="block text-sm font-medium mb-2">
-              Capacidad del Tanque (L) <span class="text-red-500">*</span>
-            </label>
-            <p-inputNumber id="fuelCapacity" formControlName="fuelCapacity" [min]="1" [max]="200" [step]="1"
-              placeholder="75" class="w-full" [class.ng-invalid]="
-                createVehicleForm.get('fuelCapacity')?.invalid &&
-                createVehicleForm.get('fuelCapacity')?.touched
-              ">
-            </p-inputNumber>
-            @if (getFieldError(createVehicleForm, 'fuelCapacity')) {
-            <small class="text-red-500">{{
-              getFieldError(createVehicleForm, "fuelCapacity")
-              }}</small>
-            }
-          </div>
-        </div>
-
-        <div class="col-12">
-          <div class="field">
-            <label for="averageConsumption" class="block text-sm font-medium mb-2">
-              Consumo Promedio (L/100km) <span class="text-red-500">*</span>
-            </label>
-            <p-inputNumber id="averageConsumption" formControlName="averageConsumption" [min]="0.1" [max]="50"
-              [step]="0.1" [minFractionDigits]="1" [maxFractionDigits]="1" placeholder="8.5" class="w-full"
-              [class.ng-invalid]="
-                createVehicleForm.get('averageConsumption')?.invalid &&
-                createVehicleForm.get('averageConsumption')?.touched
-              ">
-            </p-inputNumber>
-            @if (getFieldError(createVehicleForm, 'averageConsumption')) {
-            <small class="text-red-500">{{
-              getFieldError(createVehicleForm, "averageConsumption")
-              }}</small>
-            }
-          </div>
-        </div>
-      </div>
-
-      <div class="flex justify-content-end gap-2 mt-4">
-        <p-button type="button" label="Cancelar" [text]="true" (onClick)="cancelCreate()">
-        </p-button>
-        <p-button type="submit" label="Crear Vehículo" [disabled]="!createVehicleForm.valid" [loading]="isLoading()">
-        </p-button>
-      </div>
-    </form>
+    <app-generic-form 
+      [formFields]="createVehicleFields" 
+      [loading]="isLoading()"
+      (formSubmit)="onCreateVehicleSubmit($event)" 
+      (cancel)="cancelCreate()">
+    </app-generic-form>
   </p-dialog>
 
   <p-dialog header="Editar Vehículo" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '600px' }"
     [closable]="true" [draggable]="false" [resizable]="false">
-    <form [formGroup]="editVehicleForm" (ngSubmit)="onUpdateVehicle()">
-      <div class="grid">
-        <div class="col-12">
-          <div class="field">
-            <label class="block text-sm font-medium mb-2">Placa</label>
-            <input pInputText [value]="selectedVehicle()?.plate" readonly class="w-full bg-gray-100" />
-          </div>
-        </div>
+    
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-2">Placa</label>
+      <input pInputText [value]="selectedVehicle()?.plate" readonly class="w-full bg-gray-100" />
+    </div>
 
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label for="editBrand" class="block text-sm font-medium mb-2">
-              Marca <span class="text-red-500">*</span>
-            </label>
-            <input pInputText id="editBrand" formControlName="brand" class="w-full" [class.ng-invalid]="
-                editVehicleForm.get('brand')?.invalid &&
-                editVehicleForm.get('brand')?.touched
-              " />
-            @if (getFieldError(editVehicleForm, 'brand')) {
-            <small class="text-red-500">{{
-              getFieldError(editVehicleForm, "brand")
-              }}</small>
-            }
-          </div>
-        </div>
-
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label for="editModel" class="block text-sm font-medium mb-2">
-              Modelo <span class="text-red-500">*</span>
-            </label>
-            <input pInputText id="editModel" formControlName="model" class="w-full" [class.ng-invalid]="
-                editVehicleForm.get('model')?.invalid &&
-                editVehicleForm.get('model')?.touched
-              " />
-            @if (getFieldError(editVehicleForm, 'model')) {
-            <small class="text-red-500">{{
-              getFieldError(editVehicleForm, "model")
-              }}</small>
-            }
-          </div>
-        </div>
-
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label for="editFuelCapacity" class="block text-sm font-medium mb-2">
-              Capacidad del Tanque (L) <span class="text-red-500">*</span>
-            </label>
-            <p-inputNumber id="editFuelCapacity" formControlName="fuelCapacity" [min]="1" [max]="200" [step]="1"
-              class="w-full" [class.ng-invalid]="
-                editVehicleForm.get('fuelCapacity')?.invalid &&
-                editVehicleForm.get('fuelCapacity')?.touched
-              ">
-            </p-inputNumber>
-            @if (getFieldError(editVehicleForm, 'fuelCapacity')) {
-            <small class="text-red-500">{{
-              getFieldError(editVehicleForm, "fuelCapacity")
-              }}</small>
-            }
-          </div>
-        </div>
-
-        <!-- Consumo Promedio -->
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label for="editAverageConsumption" class="block text-sm font-medium mb-2">
-              Consumo Promedio (L/100km) <span class="text-red-500">*</span>
-            </label>
-            <p-inputNumber id="editAverageConsumption" formControlName="averageConsumption" [min]="0.1" [max]="50"
-              [step]="0.1" [minFractionDigits]="1" [maxFractionDigits]="1" class="w-full" [class.ng-invalid]="
-                editVehicleForm.get('averageConsumption')?.invalid &&
-                editVehicleForm.get('averageConsumption')?.touched
-              ">
-            </p-inputNumber>
-            @if (getFieldError(editVehicleForm, 'averageConsumption')) {
-            <small class="text-red-500">{{
-              getFieldError(editVehicleForm, "averageConsumption")
-              }}</small>
-            }
-          </div>
-        </div>
-
-        <!-- Último Mantenimiento -->
-        <div class="col-12">
-          <div class="field">
-            <label for="lastMaintenance" class="block text-sm font-medium mb-2">
-              Último Mantenimiento
-            </label>
-            <p-calendar id="lastMaintenance" formControlName="lastMaintenance" [showIcon]="true" dateFormat="dd/mm/yy"
-              placeholder="Seleccionar fecha" class="w-full">
-            </p-calendar>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex justify-content-end gap-2 mt-4">
-        <p-button type="button" label="Cancelar" [text]="true" (onClick)="cancelEdit()">
-        </p-button>
-        <p-button type="submit" label="Actualizar Vehículo" [disabled]="!editVehicleForm.valid" [loading]="isLoading()">
-        </p-button>
-      </div>
-    </form>
+    <app-generic-form 
+      [formFields]="editVehicleFields" 
+      [loading]="isLoading()"
+      (formSubmit)="onUpdateVehicleSubmit($event)" 
+      (cancel)="cancelEdit()">
+    </app-generic-form>
   </p-dialog>
 </div>

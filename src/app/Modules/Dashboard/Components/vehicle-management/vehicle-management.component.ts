@@ -1,6 +1,5 @@
 import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 
 // PrimeNG
@@ -8,14 +7,15 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { CalendarModule } from 'primeng/calendar';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
+
+// Shared Components
+import { GenericFormComponent } from '../../../../Shared/Components/generic-form/generic-form.component';
+import { FormFieldBase } from '../../../../Shared/Models/forms/form-field-base';
 
 // Services
 import { VehicleService, Vehicle, CreateVehicleRequest, UpdateVehicleRequest } from '../../Services/vehicle.service';
@@ -38,8 +38,8 @@ export class VehicleManagementComponent implements OnInit, OnDestroy {
   isLoading = signal<boolean>(false);
 
   // Forms
-  createVehicleForm: FormGroup;
-  editVehicleForm: FormGroup;
+  createVehicleFields: FormFieldBase<string>[] = [];
+  editVehicleFields: FormFieldBase<string>[] = [];
 
   // Computed
   isAdmin = computed(() => this.authService.isAdmin());
@@ -51,40 +51,30 @@ export class VehicleManagementComponent implements OnInit, OnDestroy {
   constructor(
     private vehicleService: VehicleService,
     private authService: AuthService,
-    private fb: FormBuilder,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
-  ) {
-    // Formulario para crear vehículo
-    this.createVehicleForm = this.fb.group({
-      licensePlate: ['', [
-        Validators.required, 
-        Validators.pattern(/^[A-Z]{3}-\d{3}$/),
-        Validators.maxLength(7)
-      ]],
-      brand: ['', [Validators.required, Validators.maxLength(100)]],
-      model: ['', [Validators.required, Validators.maxLength(100)]],
-      fuelCapacity: [0, [Validators.required, Validators.min(1), Validators.max(200)]],
-      averageConsumption: [0, [Validators.required, Validators.min(0.1), Validators.max(50)]]
-    });
-
-    // Formulario para editar vehículo
-    this.editVehicleForm = this.fb.group({
-      brand: ['', [Validators.required, Validators.maxLength(100)]],
-      model: ['', [Validators.required, Validators.maxLength(100)]],
-      fuelCapacity: [0, [Validators.required, Validators.min(1), Validators.max(200)]],
-      averageConsumption: [0, [Validators.required, Validators.min(0.1), Validators.max(50)]],
-      lastMaintenance: [null]
-    });
-  }
+  ) {}
 
   ngOnInit(): void {
+    this.initializeFormFields();
     this.loadVehicles();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private initializeFormFields(): void {
+    console.log('🔧 Initializing vehicle form fields...');
+    this.createVehicleFields = [
+      new FormFieldBase({ key: 'licensePlate', label: 'Placa del Vehículo', required: true, controlType: 'textbox', order: 1 }),
+      new FormFieldBase({ key: 'brand', label: 'Marca', required: true, controlType: 'textbox', order: 2 }),
+      new FormFieldBase({ key: 'model', label: 'Modelo', required: true, controlType: 'textbox', order: 3 }),
+      new FormFieldBase({ key: 'fuelCapacity', label: 'Capacidad de Combustible (L)', required: true, controlType: 'textbox', type: 'number', order: 4 }),
+      new FormFieldBase({ key: 'averageConsumption', label: 'Consumo Promedio (L/100km)', required: true, controlType: 'textbox', type: 'number', order: 5 })
+    ];
+    console.log('✅ Vehicle form fields initialized successfully');
   }
 
   // Cargar vehículos
@@ -111,71 +101,69 @@ export class VehicleManagementComponent implements OnInit, OnDestroy {
 
   // Mostrar dialog para crear vehículo
   showCreateVehicleDialog(): void {
-    if (this.createVehicleForm) {
-      this.createVehicleForm.reset();
-    }
     this.showCreateDialog.set(true);
   }
 
   // Crear nuevo vehículo
-  onCreateVehicle(): void {
-    if (this.createVehicleForm && this.createVehicleForm.valid) {
-      this.isLoading.set(true);
-      const vehicleData: CreateVehicleRequest = this.createVehicleForm.value;
+  onCreateVehicleSubmit(formData: Record<string, any>): void {
+    console.log('📝 Create vehicle form submitted:', formData);
+    this.isLoading.set(true);
+    const vehicleData: CreateVehicleRequest = {
+      licensePlate: formData['licensePlate'],
+      brand: formData['brand'],
+      model: formData['model'],
+      fuelCapacity: parseFloat(formData['fuelCapacity']),
+      averageConsumption: parseFloat(formData['averageConsumption'])
+    };
 
-      this.vehicleService.createVehicle(vehicleData)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (newVehicle) => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Éxito',
-              detail: `Vehículo ${newVehicle.plate} creado correctamente`
-            });
-            this.showCreateDialog.set(false);
-            this.createVehicleForm.reset();
-            this.isLoading.set(false);
-          },
-          error: (error) => {
-            console.error('Error creating vehicle:', error);
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'No se pudo crear el vehículo. Verifique que la placa no esté duplicada.'
-            });
-            this.isLoading.set(false);
-          }
-        });
-    } else {
-      this.markFormGroupTouched(this.createVehicleForm);
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Advertencia',
-        detail: 'Por favor complete todos los campos requeridos'
+    this.vehicleService.createVehicle(vehicleData)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (newVehicle) => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: `Vehículo ${newVehicle.plate} creado correctamente`
+          });
+          this.showCreateDialog.set(false);
+          this.loadVehicles();
+          this.isLoading.set(false);
+        },
+        error: (error) => {
+          console.error('Error creating vehicle:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo crear el vehículo. Verifique que la placa no esté duplicada.'
+          });
+          this.isLoading.set(false);
+        }
       });
-    }
   }
 
   // Mostrar dialog para editar vehículo
   showEditVehicleDialog(vehicle: Vehicle): void {
     this.selectedVehicle.set(vehicle);
-    if (this.editVehicleForm) {
-      this.editVehicleForm.patchValue({
-        brand: vehicle.brand,
-        model: vehicle.model,
-        fuelCapacity: vehicle.fuelCapacity,
-        averageConsumption: vehicle.fuelEfficiency,
-        lastMaintenance: vehicle.lastMaintenance
-      });
-    }
+    this.editVehicleFields = [
+      new FormFieldBase({ key: 'brand', label: 'Marca', required: true, controlType: 'textbox', value: vehicle.brand, order: 1 }),
+      new FormFieldBase({ key: 'model', label: 'Modelo', required: true, controlType: 'textbox', value: vehicle.model, order: 2 }),
+      new FormFieldBase({ key: 'fuelCapacity', label: 'Capacidad de Combustible (L)', required: true, controlType: 'textbox', type: 'number', value: (vehicle.fuelCapacity || 0).toString(), order: 3 }),
+      new FormFieldBase({ key: 'averageConsumption', label: 'Consumo Promedio (L/100km)', required: true, controlType: 'textbox', type: 'number', value: (vehicle.fuelEfficiency || 0).toString(), order: 4 })
+    ];
     this.showEditDialog.set(true);
   }
 
   // Actualizar vehículo
-  onUpdateVehicle(): void {
-    if (this.editVehicleForm && this.editVehicleForm.valid && this.selectedVehicle()) {
+  onUpdateVehicleSubmit(formData: Record<string, any>): void {
+    console.log('📝 Update vehicle form submitted:', formData);
+    if (this.selectedVehicle()) {
       this.isLoading.set(true);
-      const vehicleData: UpdateVehicleRequest = this.editVehicleForm.value;
+      const vehicleData: UpdateVehicleRequest = {
+        brand: formData['brand'],
+        model: formData['model'],
+        fuelCapacity: parseFloat(formData['fuelCapacity']),
+        averageConsumption: parseFloat(formData['averageConsumption'])
+      };
 
       this.vehicleService.updateVehicle(this.selectedVehicle()!.id, vehicleData)
         .pipe(takeUntil(this.destroy$))
@@ -188,6 +176,7 @@ export class VehicleManagementComponent implements OnInit, OnDestroy {
             });
             this.showEditDialog.set(false);
             this.selectedVehicle.set(null);
+            this.loadVehicles();
             this.isLoading.set(false);
           },
           error: (error) => {
@@ -200,13 +189,6 @@ export class VehicleManagementComponent implements OnInit, OnDestroy {
             this.isLoading.set(false);
           }
         });
-    } else {
-      this.markFormGroupTouched(this.editVehicleForm);
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Advertencia',
-        detail: 'Por favor complete todos los campos requeridos'
-      });
     }
   }
 
@@ -248,17 +230,11 @@ export class VehicleManagementComponent implements OnInit, OnDestroy {
   // Cancelar operaciones
   cancelCreate(): void {
     this.showCreateDialog.set(false);
-    if (this.createVehicleForm) {
-      this.createVehicleForm.reset();
-    }
   }
 
   cancelEdit(): void {
     this.showEditDialog.set(false);
     this.selectedVehicle.set(null);
-    if (this.editVehicleForm) {
-      this.editVehicleForm.reset();
-    }
   }
 
   // Obtener severidad del estado
@@ -281,25 +257,4 @@ export class VehicleManagementComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Marcar todos los campos del formulario como tocados
-  private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach(key => {
-      const control = formGroup.get(key);
-      control?.markAsTouched();
-    });
-  }
-
-  // Obtener mensaje de error para un campo
-  getFieldError(form: FormGroup, fieldName: string): string {
-    if (!form) return '';
-    const field = form.get(fieldName);
-    if (field?.errors && field.touched) {
-      if (field.errors['required']) return `${fieldName} es requerido`;
-      if (field.errors['pattern']) return 'Formato inválido';
-      if (field.errors['min']) return `Valor mínimo: ${field.errors['min'].min}`;
-      if (field.errors['max']) return `Valor máximo: ${field.errors['max'].max}`;
-      if (field.errors['maxlength']) return `Máximo ${field.errors['maxlength'].requiredLength} caracteres`;
-    }
-    return '';
-  }
 }
