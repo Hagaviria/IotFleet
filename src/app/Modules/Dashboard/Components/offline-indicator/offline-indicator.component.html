@@ -1,0 +1,7 @@
+<div class="offline-indicator">
+    <div
+        [class]="'flex align-items-center gap-2 px-3 py-1 border-round text-sm font-medium ' + statusBgColor() + ' ' + statusColor()">
+        <i [class]="'pi ' + statusIcon()"></i>
+        <span>{{ statusText() }}</span>
+    </div>
+</div>

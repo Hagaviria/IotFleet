@@ -5,6 +5,7 @@ import { CardModule } from 'primeng/card';
 import { GenericFormComponent } from '../../../../Shared/Components/generic-form/generic-form.component';
 import { FormFieldBase } from '../../../../Shared/Models/forms/form-field-base';
 import { ButtonModule } from 'primeng/button';
+import { ToastModule } from 'primeng/toast';
 import { LoginForm } from '../../Models/loginForm';
 import { AuthService } from '../../../../Security/Services/auth.service';
 import { Router } from '@angular/router';
@@ -19,6 +20,7 @@ import { MadebyFooterComponent } from '../../../../Shared/Components/madeby-foot
     CardModule,
     GenericFormComponent,
     ButtonModule,
+    ToastModule,
     MadebyFooterComponent,
   ],
   templateUrl: './login.component.html',
@@ -27,11 +29,11 @@ import { MadebyFooterComponent } from '../../../../Shared/Components/madeby-foot
 export class LoginComponent {
   formFields: FormFieldBase<string>[] = [
     new FormFieldBase({
-      key: 'user',
-      label: 'Usuario',
+      key: 'email',
+      label: 'Email',
       required: true,
       controlType: 'textbox',
-      type: 'text',
+      type: 'email',
     }),
     new FormFieldBase({
       key: 'password',
@@ -46,33 +48,32 @@ export class LoginComponent {
   private readonly messageService = inject(MessageService);
 
   onFormSubmit(formData: Record<string, any>) {
-    const loginForm: LoginForm = {
-      user: (formData['user'] ?? '') as string,
-      password: (formData['password'] ?? '') as string,
-    };
-    this.authService.login(loginForm.user, loginForm.password).subscribe({
+    const email = (formData['email'] ?? '') as string;
+    const password = (formData['password'] ?? '') as string;
+    
+    this.authService.login(email, password).subscribe({
       next: (success) =>
         success
-          ? this.handleLoginSuccess(loginForm.user)
+          ? this.handleLoginSuccess(email)
           : this.handleLoginInvalid(),
       error: () => this.handleLoginError(),
     });
   }
 
-  private handleLoginSuccess(user: string) {
+  private handleLoginSuccess(email: string) {
     this.messageService.add({
       severity: 'success',
       summary: 'Sesión iniciada',
-      detail: `Bienvenido ${user}`,
+      detail: `Bienvenido ${email}`,
     });
-    this.router.navigate(['/projects']);
+    this.router.navigate(['/dashboard']);
   }
 
   private handleLoginInvalid() {
     this.messageService.add({
       severity: 'warn',
       summary: 'Credenciales inválidas',
-      detail: 'Usuario o contraseña incorrectos',
+      detail: 'Email o contraseña incorrectos',
     });
   }
 

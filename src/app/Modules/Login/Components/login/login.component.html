@@ -1,22 +1,21 @@
 <div class="login-container">
 
-  <!-- User Icon -->
+
   <div class="user-icon">
     <div class="user-silhouette">
       <div class="user-head"></div>
       <div class="user-body"></div>
     </div>
   </div>
-  
-  <!-- Main Login Card -->
+
   <p-card class="login-card">
-    <app-generic-form
-    [formFields]="formFields"
-    labelSubmit="Iniciar sesión"
-    (formSubmit)="onFormSubmit($event)"
-  ></app-generic-form>
+    <app-generic-form [formFields]="formFields" labelSubmit="Iniciar sesión"
+      (formSubmit)="onFormSubmit($event)"></app-generic-form>
   </p-card>
 
-  <!-- Madeby Footer -->
+
   <app-madeby-footer></app-madeby-footer>
+
+
+  <p-toast></p-toast>
 </div>
