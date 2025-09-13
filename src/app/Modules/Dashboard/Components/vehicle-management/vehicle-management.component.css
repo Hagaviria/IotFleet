@@ -1,0 +1,257 @@
+.vehicle-management {
+  padding: 1rem;
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.field label {
+  color: #374151;
+  font-weight: 500;
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  padding: 0.75rem;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background-color: #f8fafc;
+  color: #374151;
+  font-weight: 600;
+  padding: 0.75rem;
+}
+
+.p-dialog .p-dialog-header {
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.p-dialog .p-dialog-content {
+  padding: 1.5rem;
+}
+
+.p-button.p-button-text {
+  color: #6b7280;
+}
+
+.p-button.p-button-text:hover {
+  background-color: #f3f4f6;
+}
+
+.p-inputtext.ng-invalid.ng-touched {
+  border-color: #ef4444;
+}
+
+.p-inputnumber.ng-invalid.ng-touched .p-inputtext {
+  border-color: #ef4444;
+}
+
+.p-calendar.ng-invalid.ng-touched .p-inputtext {
+  border-color: #ef4444;
+}
+
+.text-red-500 {
+  color: #ef4444;
+}
+
+.text-gray-400 {
+  color: #9ca3af;
+}
+
+.text-gray-500 {
+  color: #6b7280;
+}
+
+.text-gray-800 {
+  color: #1f2937;
+}
+
+.text-blue-600 {
+  color: #2563eb;
+}
+
+.bg-gray-100 {
+  background-color: #f3f4f6;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.text-4xl {
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.justify-content-between {
+  justify-content: space-between;
+}
+
+.justify-content-end {
+  justify-content: flex-end;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.gap-3 {
+  gap: 0.75rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.py-4 {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.px-2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.py-1 {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.rounded-full {
+  border-radius: 9999px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.block {
+  display: block;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .md\\:col-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+}
+
+/* Grid system */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+}
+
+.col-12 {
+  grid-column: span 12;
+}
+
+@media (min-width: 768px) {
+  .md\\:col-6 {
+    grid-column: span 6;
+  }
+}
+
+/* PrimeNG overrides */
+.p-datatable .p-datatable-tbody > tr:hover {
+  background-color: #f8fafc;
+}
+
+.p-tag {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.p-button {
+  font-weight: 500;
+}
+
+.p-dialog {
+  border-radius: 0.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.p-card {
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Loading states */
+.p-datatable .p-datatable-loading-overlay {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Empty state */
+.p-datatable .p-datatable-tbody > tr > td[colspan] {
+  text-align: center;
+  padding: 2rem;
+}
+
+/* Form validation */
+.field small {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+}
+
+/* Button states */
+.p-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Table responsive */
+@media (max-width: 768px) {
+  .p-datatable .p-datatable-thead > tr > th,
+  .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .p-dialog {
+    width: 95% !important;
+    margin: 1rem;
+  }
+}

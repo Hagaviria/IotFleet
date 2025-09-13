@@ -20,6 +20,11 @@ import { CalendarModule } from 'primeng/calendar';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { CheckboxModule } from 'primeng/checkbox';
+import { PasswordModule } from 'primeng/password';
+import { MessageService, ConfirmationService } from 'primeng/api';
 
 // Components
 import { DashboardComponent } from './Components/dashboard/dashboard.component';
@@ -27,6 +32,12 @@ import { MapComponent } from './Components/map/map.component';
 import { HistoricalChartsComponent } from './Components/historical-charts/historical-charts.component';
 import { AlertsComponent } from './Components/alerts/alerts.component';
 import { OfflineIndicatorComponent } from './Components/offline-indicator/offline-indicator.component';
+import { VehicleManagementComponent } from './Components/vehicle-management/vehicle-management.component';
+import { SensorDataManagementComponent } from './Components/sensor-data-management/sensor-data-management.component';
+import { UserManagementComponent } from './Components/user-management/user-management.component';
+
+// Shared Components
+import { GenericFormComponent } from '../../Shared/Components/generic-form/generic-form.component';
 
 // Services
 import { DashboardService } from './Services/dashboard.service';
@@ -40,7 +51,10 @@ import { OfflineService } from './Services/offline.service';
     MapComponent,
     HistoricalChartsComponent,
     AlertsComponent,
-    OfflineIndicatorComponent
+    OfflineIndicatorComponent,
+    VehicleManagementComponent,
+    SensorDataManagementComponent,
+    UserManagementComponent
   ],
   imports: [
     CommonModule,
@@ -62,13 +76,20 @@ import { OfflineService } from './Services/offline.service';
     CalendarModule,
     TableModule,
     TagModule,
-    TooltipModule
+    TooltipModule,
+    InputTextModule,
+    InputNumberModule,
+    CheckboxModule,
+    PasswordModule,
+    GenericFormComponent
   ],
   providers: [
     DashboardService,
     MapService,
     AlertsService,
-    OfflineService
+    OfflineService,
+    MessageService,
+    ConfirmationService
   ]
 })
 export class DashboardModule { }

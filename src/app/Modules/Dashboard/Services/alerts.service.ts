@@ -47,14 +47,23 @@ export class AlertsService {
   }
 
   getAlerts(): Observable<Alert[]> {
-    // Como no hay API de alertas, generamos alertas simuladas basadas en datos de sensores
-    return this.sensorDataService.sensorData$.pipe(
-      map(sensorData => this.generateSimulatedAlerts(sensorData)),
+    return this.http.get<any>(`${this.API_BASE_URL}/Alerts/fuel-alerts`, {
+      headers: this.authService.getAuthHeaders()
+    }).pipe(
+      map(response => {
+        if (response && response.success && response.data && Array.isArray(response.data)) {
+          return response.data.map((item: any) => this.mapApiAlertToAlert(item));
+        }
+        return [];
+      }),
       tap(alerts => this.cacheAlerts(alerts)),
       catchError(error => {
-        console.error('Error generating alerts:', error);
-        const cachedAlerts = this.getCachedAlerts();
-        return cachedAlerts.length > 0 ? of(cachedAlerts) : of([]);
+        console.error('Error fetching alerts from API:', error);
+        // Fallback a alertas simuladas si la API falla
+        return this.sensorDataService.sensorData$.pipe(
+          map(sensorData => this.generateSimulatedAlerts(sensorData)),
+          tap(alerts => this.cacheAlerts(alerts))
+        );
       })
     );
   }
@@ -355,5 +364,74 @@ export class AlertsService {
       case 'predictive': return 'Alerta Predictiva';
       default: return 'Alerta del Sistema';
     }
+  }
+
+  private mapApiAlertToAlert(apiAlert: any): Alert {
+    return {
+      id: apiAlert.vehicleId,
+      type: 'fuel',
+      severity: this.mapSeverity(apiAlert.severity),
+      title: 'Alerta de Combustible',
+      message: apiAlert.message || `Vehículo ${apiAlert.licensePlate} tiene nivel de combustible bajo: ${apiAlert.currentFuelLevel}%`,
+      vehicleId: apiAlert.vehicleId,
+      timestamp: new Date(apiAlert.alertTimestamp),
+      isRead: false,
+      isPredictive: true,
+      additionalData: {
+        licensePlate: apiAlert.licensePlate,
+        currentFuelLevel: apiAlert.currentFuelLevel,
+        estimatedAutonomyHours: apiAlert.estimatedAutonomyHours,
+        remainingDistanceKm: apiAlert.remainingDistanceKm
+      }
+    };
+  }
+
+  private mapSeverity(apiSeverity: string): 'low' | 'medium' | 'high' {
+    switch (apiSeverity?.toLowerCase()) {
+      case 'critical': return 'high';
+      case 'high': return 'high';
+      case 'medium': return 'medium';
+      case 'low': return 'low';
+      default: return 'medium';
+    }
+  }
+
+  // Métodos para obtener estadísticas de alertas
+  getAlertStatistics(): Observable<any> {
+    return this.http.get<any>(`${this.API_BASE_URL}/Alerts/fuel-alerts/statistics`, {
+      headers: this.authService.getAuthHeaders()
+    }).pipe(
+      map(response => response?.success ? response.data : null),
+      catchError(error => {
+        console.error('Error fetching alert statistics:', error);
+        return of(null);
+      })
+    );
+  }
+
+  // Método para calcular alerta de combustible para un vehículo específico
+  calculateFuelAlert(vehicleId: string): Observable<any> {
+    return this.http.post<any>(`${this.API_BASE_URL}/Alerts/fuel-alerts/calculate/${vehicleId}`, {}, {
+      headers: this.authService.getAuthHeaders()
+    }).pipe(
+      map(response => response?.success ? response.data : null),
+      catchError(error => {
+        console.error('Error calculating fuel alert:', error);
+        return of(null);
+      })
+    );
+  }
+
+  // Método para obtener alertas recientes de un vehículo
+  getVehicleRecentAlerts(vehicleId: string, hours: number = 24): Observable<any[]> {
+    return this.http.get<any>(`${this.API_BASE_URL}/Alerts/vehicle/${vehicleId}/recent?hours=${hours}`, {
+      headers: this.authService.getAuthHeaders()
+    }).pipe(
+      map(response => response?.success ? response.data : []),
+      catchError(error => {
+        console.error('Error fetching vehicle alerts:', error);
+        return of([]);
+      })
+    );
   }
 }

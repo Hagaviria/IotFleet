@@ -51,7 +51,7 @@ export class DashboardService {
         return of([]);
       })
     ).subscribe(locations => {
-      this.locationsSubject.next(locations);
+      this.locationsSubject.next(locations || []);
     });
   }
 
@@ -138,15 +138,43 @@ export class DashboardService {
   }
 
   getHistoricalData(vehicleId: string, startDate: Date, endDate: Date): Observable<HistoricalData[]> {
-    const params = {
-      vehicleId,
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString()
-    };
-    return this.http.get<HistoricalData[]>(`${this.API_BASE_URL}/SensorData`, { 
-      params,
+    return this.http.get<any>(`${this.API_BASE_URL}/SensorData`, {
       headers: this.authService.getAuthHeaders()
-    });
+    }).pipe(
+      map(response => {
+        if (response && response.success && response.data) {
+          // Filtrar datos por vehículo y rango de fechas
+          const filteredData = response.data.filter((item: any) => {
+            const itemDate = new Date(item.Timestamp);
+            return item.VehicleId === vehicleId && 
+                   itemDate >= startDate && 
+                   itemDate <= endDate;
+          });
+          
+          // Convertir a formato HistoricalData
+          return filteredData.map((item: any) => ({
+            id: item.Id,
+            vehicleId: item.VehicleId,
+            date: item.Timestamp,
+            speed: item.Speed || 0,
+            fuelLevel: item.FuelLevel || 0,
+            distance: 0, // No disponible en el backend actual
+            efficiency: item.FuelConsumption || 0,
+            temperature: item.EngineTemperature || 0,
+            latitude: item.Latitude,
+            longitude: item.Longitude,
+            altitude: item.Altitude || 0,
+            fuelConsumption: item.FuelConsumption || 0,
+            ambientTemperature: item.AmbientTemperature || 0
+          })) as HistoricalData[];
+        }
+        return [];
+      }),
+      catchError(error => {
+        console.error('Error fetching historical data:', error);
+        return of([]);
+      })
+    );
   }
 
   private mapSensorDataToLocations(sensorData: any[]): Location[] {

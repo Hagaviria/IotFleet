@@ -6,27 +6,15 @@
   <div>
     @let control = form().get(field().key)!; @switch (field().controlType) {
     @case ('textbox') {
-    <input
-      pInputText
-      [formControlName]="field().key"
-      [id]="field().key"
-      [type]="field().type || 'text'"
-    />
+    <input pInputText [formControlName]="field().key" [id]="field().key" [type]="field().type || 'text'" />
     } @case ('textarea') {
-    <textarea
-      pTextarea
-      [formControlName]="field().key"
-      [autoResize]="true"
-      [id]="field().key"
-      [rows]="field().rows || 3"
-    ></textarea>
+    <textarea pTextarea [formControlName]="field().key" [autoResize]="true" [id]="field().key"
+      [rows]="field().rows || 3"></textarea>
     } @case ('checkbox') {
-    <p-checkbox
-      [binary]="true"
-      [formControlName]="field().key"
-      [inputId]="field().key"
-    ></p-checkbox>
-
+    <p-checkbox [binary]="true" [formControlName]="field().key" [inputId]="field().key"></p-checkbox>
+    } @case ('dropdown') {
+    <p-dropdown [formControlName]="field().key" [options]="field().options" optionLabel="label" optionValue="value"
+      [placeholder]="'Seleccionar ' + field().label" class="w-full"></p-dropdown>
     } } @if (control.invalid && (control.dirty || control.touched)) { @if
     (control.errors?.['required']) {
     <div class="required-label">{{ field().label }} es obligatorio</div>

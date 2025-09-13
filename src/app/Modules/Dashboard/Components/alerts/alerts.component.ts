@@ -99,7 +99,8 @@ export class AlertsComponent implements OnInit, OnDestroy {
   }
 
   private applyFilters(): void {
-    let filtered = [...this.alerts()];
+    const alerts = this.alerts();
+    let filtered = Array.isArray(alerts) ? [...alerts] : [];
 
  
     if (this.selectedSeverity() !== 'all') {
@@ -116,7 +117,17 @@ export class AlertsComponent implements OnInit, OnDestroy {
     }
 
 
-    filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.timestamp);
+      const dateB = new Date(b.timestamp);
+      
+      // Si alguna fecha es inválida, ponerla al final
+      if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0;
+      if (isNaN(dateA.getTime())) return 1;
+      if (isNaN(dateB.getTime())) return -1;
+      
+      return dateB.getTime() - dateA.getTime();
+    });
 
     this.filteredAlerts.set(filtered);
   }
@@ -293,17 +304,45 @@ export class AlertsComponent implements OnInit, OnDestroy {
     return vehicle ? `${vehicle.name} (${vehicle.plate})` : 'Vehículo desconocido';
   }
 
-  getTimeAgo(timestamp: Date): string {
-    const now = new Date();
-    const diff = now.getTime() - new Date(timestamp).getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
+  getFormattedDate(timestamp: Date | string): string {
+    try {
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) {
+        return 'Fecha inválida';
+      }
+      return date.toLocaleString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return 'Fecha inválida';
+    }
+  }
 
-    if (days > 0) return `hace ${days} día${days > 1 ? 's' : ''}`;
-    if (hours > 0) return `hace ${hours} hora${hours > 1 ? 's' : ''}`;
-    if (minutes > 0) return `hace ${minutes} minuto${minutes > 1 ? 's' : ''}`;
-    return 'hace un momento';
+  getTimeAgo(timestamp: Date | string): string {
+    try {
+      const now = new Date();
+      const date = new Date(timestamp);
+      
+      if (isNaN(date.getTime())) {
+        return 'Fecha inválida';
+      }
+      
+      const diff = now.getTime() - date.getTime();
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+
+      if (days > 0) return `hace ${days} día${days > 1 ? 's' : ''}`;
+      if (hours > 0) return `hace ${hours} hora${hours > 1 ? 's' : ''}`;
+      if (minutes > 0) return `hace ${minutes} minuto${minutes > 1 ? 's' : ''}`;
+      return 'hace un momento';
+    } catch (error) {
+      return 'Fecha inválida';
+    }
   }
 
   getConfidenceColor(confidence: number | undefined): string {

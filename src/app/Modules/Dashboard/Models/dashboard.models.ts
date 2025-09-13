@@ -37,11 +37,19 @@ export interface Vehicle {
 }
 
 export interface HistoricalData {
+  id: string;
   date: Date;
   speed: number;
   fuelLevel: number;
   distance: number;
   vehicleId: string;
+  efficiency?: number;
+  temperature?: number;
+  latitude?: number;
+  longitude?: number;
+  altitude?: number;
+  fuelConsumption?: number;
+  ambientTemperature?: number;
 }
 
 export interface Alert {
@@ -56,6 +64,7 @@ export interface Alert {
   isPredictive: boolean;
   predictedDate?: Date;
   confidence?: number;
+  additionalData?: any;
 }
 
 export interface Geofence {

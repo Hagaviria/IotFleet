@@ -36,12 +36,12 @@ export class AuthService {
   private getUserRole(): string {
     if (isPlatformBrowser(this.platformId)) {
       try {
-        return window.localStorage.getItem(this.USER_ROLE_KEY) || 'user';
+        return window.localStorage.getItem(this.USER_ROLE_KEY) || 'User';
       } catch {
-        return 'user';
+        return 'User';
       }
     }
-    return 'user';
+    return 'User';
   }
   initialize(): void {
     this.isLoggedIn.next(this.hasToken());
@@ -121,7 +121,7 @@ export class AuthService {
       } catch {}
     }
     this.isLoggedIn.next(false);
-    this.userRole.next('user');
+    this.userRole.next('User');
   }
 
   getToken(): string | null {
@@ -148,6 +148,6 @@ export class AuthService {
   }
 
   isAdmin(): boolean {
-    return this.userRole.value === 'admin';
+    return this.userRole.value?.toLowerCase() === 'admin';
   }
 }
