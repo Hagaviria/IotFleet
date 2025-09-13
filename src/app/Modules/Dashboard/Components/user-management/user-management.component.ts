@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 
 // PrimeNG
@@ -24,7 +25,7 @@ import { AuthService } from '../../../../Security/Services/auth.service';
   selector: 'app-user-management',
   standalone: false,
   templateUrl: './user-management.component.html',
-  styleUrls: ['./user-management.component.css']
+  styleUrls: ['./user-management.component.css'],
 })
 export class UserManagementComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -37,10 +38,10 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   isLoading = signal<boolean>(false);
   selectedUser = signal<User | null>(null);
 
-  // Form Fields
+  // Forms
+  passwordForm: FormGroup;
   createUserFields: FormFieldBase<string>[] = [];
   editUserFields: FormFieldBase<string>[] = [];
-  changePasswordFields: FormFieldBase<string>[] = [];
 
   // Options
   profileOptions: any[] = [];
@@ -56,24 +57,23 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   constructor(
     private userService: UserService,
     private authService: AuthService,
+    private fb: FormBuilder,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
-  ) {}
+  ) {
+    // Formulario para cambiar contraseña
+    this.passwordForm = this.fb.group({
+      currentPassword: ['', [Validators.required]],
+      newPassword: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', [Validators.required]]
+    }, { validators: this.passwordMatchValidator });
+  }
 
   ngOnInit(): void {
-    console.log('🚀 UserManagementComponent ngOnInit');
-    
-    // Cargar opciones
     this.profileOptions = this.userService.getProfileOptions();
     this.identificationTypeOptions = this.userService.getIdentificationTypeOptions();
-    
-    // Inicializar campos del formulario
     this.initializeFormFields();
-    
-    // Cargar usuarios
     this.loadUsers();
-    
-    console.log('✅ Component initialized successfully');
   }
 
   ngOnDestroy(): void {
@@ -82,118 +82,23 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   }
 
   private initializeFormFields(): void {
-    console.log('🔧 Initializing form fields...');
-    
-    // Campos para crear usuario
+    console.log('🔧 Initializing user form fields...');
     this.createUserFields = [
-      new FormFieldBase({
-        key: 'identificacion',
-        label: 'Identificación',
-        required: true,
-        controlType: 'textbox',
-        order: 1
-      }),
-      new FormFieldBase({
-        key: 'tipo_identificacion',
-        label: 'Tipo de Identificación',
-        required: true,
-        controlType: 'dropdown',
-        options: this.identificationTypeOptions,
-        order: 2
-      }),
-      new FormFieldBase({
-        key: 'nombre_completo',
-        label: 'Nombre Completo',
-        required: true,
-        controlType: 'textbox',
-        order: 3
-      }),
-      new FormFieldBase({
-        key: 'correo',
-        label: 'Email',
-        required: true,
-        controlType: 'textbox',
-        type: 'email',
-        order: 4
-      }),
-      new FormFieldBase({
-        key: 'contraseña',
-        label: 'Contraseña',
-        required: true,
-        controlType: 'textbox',
-        type: 'password',
-        order: 5
-      }),
-      new FormFieldBase({
-        key: 'id_perfil',
-        label: 'Perfil',
-        required: true,
-        controlType: 'dropdown',
-        options: this.profileOptions,
-        value: '2',
-        order: 6
-      }),
-      new FormFieldBase({
-        key: 'direccion',
-        label: 'Dirección',
-        required: false,
-        controlType: 'textbox',
-        order: 7
-      }),
-      new FormFieldBase({
-        key: 'telefono_fijo',
-        label: 'Teléfono Fijo',
-        required: false,
-        controlType: 'textbox',
-        order: 8
-      }),
-      new FormFieldBase({
-        key: 'telefono_celular',
-        label: 'Teléfono Celular',
-        required: false,
-        controlType: 'textbox',
-        order: 9
-      }),
-      new FormFieldBase({
-        key: 'estado',
-        label: 'Usuario Activo',
-        required: false,
-        controlType: 'checkbox',
-        value: 'true',
-        order: 10
-      })
+      new FormFieldBase({ key: 'identificacion', label: 'Identificación', required: true, controlType: 'textbox', order: 1 }),
+      new FormFieldBase({ key: 'tipo_identificacion', label: 'Tipo de Identificación', required: true, controlType: 'dropdown', options: this.identificationTypeOptions.map(opt => ({ key: opt.value, value: opt.label })), order: 2 }),
+      new FormFieldBase({ key: 'nombre_completo', label: 'Nombre Completo', required: true, controlType: 'textbox', order: 3 }),
+      new FormFieldBase({ key: 'correo', label: 'Email', required: true, controlType: 'textbox', order: 4 }),
+      new FormFieldBase({ key: 'contraseña', label: 'Contraseña', required: true, controlType: 'textbox', type: 'password', order: 5 }),
+      new FormFieldBase({ key: 'id_perfil', label: 'Perfil', required: true, controlType: 'dropdown', options: this.profileOptions.map(opt => ({ key: opt.value, value: opt.label })), value: '2', order: 6 }),
+      new FormFieldBase({ key: 'fecha_nacimiento', label: 'Fecha de Nacimiento', required: false, controlType: 'textbox', type: 'date', order: 7 }),
+      new FormFieldBase({ key: 'direccion', label: 'Dirección', required: false, controlType: 'textbox', order: 8 }),
+      new FormFieldBase({ key: 'telefono_fijo', label: 'Teléfono Fijo', required: false, controlType: 'textbox', order: 9 }),
+      new FormFieldBase({ key: 'telefono_celular', label: 'Teléfono Celular', required: false, controlType: 'textbox', order: 10 }),
+      new FormFieldBase({ key: 'estado', label: 'Usuario Activo', required: false, controlType: 'checkbox', value: 'true', order: 11 })
     ];
-
-    // Campos para cambiar contraseña
-    this.changePasswordFields = [
-      new FormFieldBase({
-        key: 'currentPassword',
-        label: 'Contraseña Actual',
-        required: true,
-        controlType: 'textbox',
-        type: 'password',
-        order: 1
-      }),
-      new FormFieldBase({
-        key: 'newPassword',
-        label: 'Nueva Contraseña',
-        required: true,
-        controlType: 'textbox',
-        type: 'password',
-        order: 2
-      }),
-      new FormFieldBase({
-        key: 'confirmPassword',
-        label: 'Confirmar Contraseña',
-        required: true,
-        controlType: 'textbox',
-        type: 'password',
-        order: 3
-      })
-    ];
-    
-    console.log('✅ Form fields initialized successfully');
+    console.log('✅ User form fields initialized successfully');
   }
+
 
   // Cargar usuarios
   loadUsers(): void {
@@ -221,119 +126,52 @@ export class UserManagementComponent implements OnInit, OnDestroy {
 
   // Mostrar dialog para crear usuario
   showCreateUserDialog(): void {
-    console.log('🎯 showCreateUserDialog called');
     this.showCreateDialog.set(true);
   }
 
   // Mostrar dialog para editar usuario
   showEditUserDialog(user: User): void {
     this.selectedUser.set(user);
-    
-    // Crear campos de edición con valores del usuario
     this.editUserFields = [
-      new FormFieldBase({
-        key: 'identificacion',
-        label: 'Identificación',
-        required: true,
-        controlType: 'textbox',
-        value: user.identificacion,
-        order: 1
-      }),
-      new FormFieldBase({
-        key: 'tipo_identificacion',
-        label: 'Tipo de Identificación',
-        required: true,
-        controlType: 'dropdown',
-        options: this.identificationTypeOptions,
-        value: user.tipo_identificacion || 'CC',
-        order: 2
-      }),
-      new FormFieldBase({
-        key: 'nombre_completo',
-        label: 'Nombre Completo',
-        required: true,
-        controlType: 'textbox',
-        value: user.nombre_completo,
-        order: 3
-      }),
-      new FormFieldBase({
-        key: 'correo',
-        label: 'Email',
-        required: true,
-        controlType: 'textbox',
-        type: 'email',
-        value: user.correo,
-        order: 4
-      }),
-      new FormFieldBase({
-        key: 'id_perfil',
-        label: 'Perfil',
-        required: true,
-        controlType: 'dropdown',
-        options: this.profileOptions,
-        value: user.id_perfil.toString(),
-        order: 5
-      }),
-      new FormFieldBase({
-        key: 'direccion',
-        label: 'Dirección',
-        required: false,
-        controlType: 'textbox',
-        value: user.direccion || '',
-        order: 6
-      }),
-      new FormFieldBase({
-        key: 'telefono_fijo',
-        label: 'Teléfono Fijo',
-        required: false,
-        controlType: 'textbox',
-        value: user.telefono_fijo || '',
-        order: 7
-      }),
-      new FormFieldBase({
-        key: 'telefono_celular',
-        label: 'Teléfono Celular',
-        required: false,
-        controlType: 'textbox',
-        value: user.telefono_celular || '',
-        order: 8
-      }),
-      new FormFieldBase({
-        key: 'estado',
-        label: 'Usuario Activo',
-        required: false,
-        controlType: 'checkbox',
-        value: user.estado.toString(),
-        order: 9
-      })
+      new FormFieldBase({ key: 'identificacion', label: 'Identificación', required: true, controlType: 'textbox', value: user.identificacion, order: 1 }),
+      new FormFieldBase({ key: 'tipo_identificacion', label: 'Tipo de Identificación', required: true, controlType: 'dropdown', options: this.identificationTypeOptions.map(opt => ({ key: opt.value, value: opt.label })), value: user.tipo_identificacion || 'CC', order: 2 }),
+      new FormFieldBase({ key: 'nombre_completo', label: 'Nombre Completo', required: true, controlType: 'textbox', value: user.nombre_completo, order: 3 }),
+      new FormFieldBase({ key: 'correo', label: 'Email', required: true, controlType: 'textbox', value: user.correo, order: 4 }),
+      new FormFieldBase({ key: 'id_perfil', label: 'Perfil', required: true, controlType: 'dropdown', options: this.profileOptions.map(opt => ({ key: opt.value, value: opt.label })), value: user.id_perfil.toString(), order: 5 }),
+      new FormFieldBase({ key: 'fecha_nacimiento', label: 'Fecha de Nacimiento', required: false, controlType: 'textbox', type: 'date', value: user.fecha_nacimiento ? new Date(user.fecha_nacimiento).toISOString().split('T')[0] : '', order: 6 }),
+      new FormFieldBase({ key: 'direccion', label: 'Dirección', required: false, controlType: 'textbox', value: user.direccion || '', order: 7 }),
+      new FormFieldBase({ key: 'telefono_fijo', label: 'Teléfono Fijo', required: false, controlType: 'textbox', value: user.telefono_fijo || '', order: 8 }),
+      new FormFieldBase({ key: 'telefono_celular', label: 'Teléfono Celular', required: false, controlType: 'textbox', value: user.telefono_celular || '', order: 9 }),
+      new FormFieldBase({ key: 'estado', label: 'Usuario Activo', required: false, controlType: 'checkbox', value: user.estado ? 'true' : 'false', order: 10 })
     ];
-    
     this.showEditDialog.set(true);
   }
 
   // Mostrar dialog para cambiar contraseña
   showChangePasswordDialog(user: User): void {
     this.selectedUser.set(user);
+    if (this.passwordForm) {
+      this.passwordForm.reset();
+    }
     this.showPasswordDialog.set(true);
   }
 
-  // Manejar envío del formulario de crear usuario
+  // Crear usuario
   onCreateUserSubmit(formData: Record<string, any>): void {
     console.log('📝 Create user form submitted:', formData);
-    
     this.isLoading.set(true);
     const userData: CreateUserRequest = {
       identificacion: formData['identificacion'],
+      tipo_identificacion: formData['tipo_identificacion'],
       nombre_completo: formData['nombre_completo'],
       correo: formData['correo'],
       contraseña: formData['contraseña'],
       id_perfil: parseInt(formData['id_perfil']),
       estado: formData['estado'] === 'true' || formData['estado'] === true,
-      direccion: formData['direccion'] || undefined,
-      telefono_fijo: formData['telefono_fijo'] || undefined,
-      telefono_celular: formData['telefono_celular'] || undefined,
-      fecha_nacimiento: formData['fecha_nacimiento'] || undefined,
-      tipo_identificacion: formData['tipo_identificacion'] || 'CC'
+      direccion: formData['direccion'] || '',
+      telefono_fijo: formData['telefono_fijo'] || '',
+      telefono_celular: formData['telefono_celular'] || '',
+      fecha_nacimiento: formData['fecha_nacimiento'] || null
     };
 
     this.userService.createUser(userData)
@@ -361,23 +199,22 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Manejar envío del formulario de editar usuario
+  // Actualizar usuario
   onUpdateUserSubmit(formData: Record<string, any>): void {
     console.log('📝 Update user form submitted:', formData);
-    
     if (this.selectedUser()) {
       this.isLoading.set(true);
       const userData: UpdateUserRequest = {
         identificacion: formData['identificacion'],
+        tipo_identificacion: formData['tipo_identificacion'],
         nombre_completo: formData['nombre_completo'],
         correo: formData['correo'],
         id_perfil: parseInt(formData['id_perfil']),
         estado: formData['estado'] === 'true' || formData['estado'] === true,
-        direccion: formData['direccion'] || undefined,
-        telefono_fijo: formData['telefono_fijo'] || undefined,
-        telefono_celular: formData['telefono_celular'] || undefined,
-        fecha_nacimiento: formData['fecha_nacimiento'] || undefined,
-        tipo_identificacion: formData['tipo_identificacion'] || 'CC'
+        direccion: formData['direccion'] || '',
+        telefono_fijo: formData['telefono_fijo'] || '',
+        telefono_celular: formData['telefono_celular'] || '',
+        fecha_nacimiento: formData['fecha_nacimiento'] || null
       };
 
       this.userService.updateUser(this.selectedUser()!.id, userData)
@@ -407,17 +244,11 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Manejar envío del formulario de cambio de contraseña
-  onChangePasswordSubmit(formData: Record<string, any>): void {
-    console.log('🔑 Change password form submitted:', formData);
-    
-    if (this.selectedUser()) {
+  // Cambiar contraseña
+  onChangePassword(): void {
+    if (this.passwordForm && this.passwordForm.valid && this.selectedUser()) {
       this.isLoading.set(true);
-      const passwordData: ChangePasswordRequest = {
-        currentPassword: formData['currentPassword'],
-        newPassword: formData['newPassword'],
-        confirmPassword: formData['confirmPassword']
-      };
+      const passwordData: ChangePasswordRequest = this.passwordForm.value;
 
       this.userService.changePassword(this.selectedUser()!.id, passwordData)
         .pipe(takeUntil(this.destroy$))
@@ -430,6 +261,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
             });
             this.showPasswordDialog.set(false);
             this.selectedUser.set(null);
+            this.passwordForm.reset();
             this.isLoading.set(false);
           },
           error: (error) => {
@@ -442,6 +274,12 @@ export class UserManagementComponent implements OnInit, OnDestroy {
             this.isLoading.set(false);
           }
         });
+    } else {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Advertencia',
+        detail: 'Por favor complete todos los campos requeridos'
+      });
     }
   }
 
@@ -494,8 +332,38 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   cancelPasswordChange(): void {
     this.showPasswordDialog.set(false);
     this.selectedUser.set(null);
+    if (this.passwordForm) {
+      this.passwordForm.reset();
+    }
   }
 
+  // Validadores
+  private passwordMatchValidator(form: FormGroup) {
+    const newPassword = form.get('newPassword');
+    const confirmPassword = form.get('confirmPassword');
+    
+    if (newPassword && confirmPassword && newPassword.value !== confirmPassword.value) {
+      confirmPassword.setErrors({ passwordMismatch: true });
+    } else {
+      confirmPassword?.setErrors(null);
+    }
+    
+    return null;
+  }
+
+
+  // Obtener mensaje de error para un campo
+  getFieldError(form: FormGroup, fieldName: string): string {
+    if (!form) return '';
+    const field = form.get(fieldName);
+    if (field?.errors && field.touched) {
+      if (field.errors['required']) return `${fieldName} es requerido`;
+      if (field.errors['email']) return 'Email inválido';
+      if (field.errors['minlength']) return `Mínimo ${field.errors['minlength'].requiredLength} caracteres`;
+      if (field.errors['passwordMismatch']) return 'Las contraseñas no coinciden';
+    }
+    return '';
+  }
 
   // Obtener nombre del perfil
   getProfileName(profileId: number): string {

@@ -10,7 +10,7 @@
 
 .p-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 25px -5px rgba(238, 231, 231, 0.911);
 }
 
 /* Statistics cards */
@@ -29,7 +29,7 @@
 }
 
 .p-datatable .p-datatable-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #93a2e2 0%, #764ba2 100%);
   color: white;
   border: none;
 }
@@ -111,7 +111,7 @@
 
 /* Dialog styling */
 .p-dialog .p-dialog-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #96a4e2 0%, #764ba2 100%);
   color: white;
   border-radius: 8px 8px 0 0;
 }
@@ -159,43 +159,43 @@
   .alerts-container {
     padding: 0.5rem;
   }
-  
+
   .flex.flex-wrap {
     flex-direction: column;
   }
-  
+
   .flex-1.min-w-12rem {
     min-width: 100%;
     margin-bottom: 1rem;
   }
-  
+
   .p-datatable .p-datatable-thead > tr > th,
   .p-datatable .p-datatable-tbody > tr > td {
     padding: 0.5rem 0.25rem;
     font-size: 0.875rem;
   }
-  
+
   .p-datatable .p-datatable-tbody > tr > td:first-child {
     display: none;
   }
-  
+
   .p-datatable .p-datatable-thead > tr > th:first-child {
     display: none;
   }
-  
+
   .grid {
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
-  
+
   .p-card .p-4 {
     padding: 1rem;
   }
-  
+
   .text-2xl {
     font-size: 1.5rem;
   }
-  
+
   .text-3xl {
     font-size: 2rem;
   }
@@ -206,7 +206,7 @@
   .p-datatable .p-datatable-thead > tr > th:nth-child(3) {
     display: none;
   }
-  
+
   .flex.gap-2 {
     flex-direction: column;
     gap: 0.5rem;
@@ -219,37 +219,37 @@
     background-color: #1a1a1a;
     color: #e5e5e5;
   }
-  
+
   .p-card {
     background-color: #2d2d2d;
     color: #e5e5e5;
   }
-  
+
   .bg-blue-50 {
     background-color: #1e3a8a !important;
   }
-  
+
   .surface-100 {
     background-color: #374151 !important;
   }
-  
+
   .bg-yellow-50 {
     background-color: #451a03 !important;
   }
-  
+
   .text-yellow-800 {
     color: #fbbf24 !important;
   }
-  
+
   .border-yellow-400 {
     border-color: #fbbf24 !important;
   }
-  
+
   .p-datatable .p-datatable-thead > tr > th {
     background: #374151;
     color: #e5e5e5;
   }
-  
+
   .p-datatable .p-datatable-tbody > tr:hover {
     background-color: #374151;
   }

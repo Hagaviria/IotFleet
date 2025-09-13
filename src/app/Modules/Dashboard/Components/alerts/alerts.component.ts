@@ -99,8 +99,7 @@ export class AlertsComponent implements OnInit, OnDestroy {
   }
 
   private applyFilters(): void {
-    const alerts = this.alerts();
-    let filtered = Array.isArray(alerts) ? [...alerts] : [];
+    let filtered = [...(this.alerts() || [])];
 
  
     if (this.selectedSeverity() !== 'all') {

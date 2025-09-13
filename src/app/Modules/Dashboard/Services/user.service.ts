@@ -19,24 +19,6 @@ export interface User {
   tipo_identificacion?: string;
 }
 
-// Interface para la respuesta de la API
-export interface ApiUser {
-  Id: string;
-  Identificacion: string;
-  Nombre_completo: string;
-  Correo: string;
-  Id_perfil: number;
-  Nombre_perfil: string;
-  Estado: boolean;
-  Creado_en: string;
-  UpdatedAt: string;
-  Direccion?: string;
-  TelefonoFijo?: string;
-  TelefonoCelular?: string;
-  FechaNacimiento?: string;
-  TipoIdentificacion?: string;
-}
-
 export interface CreateUserRequest {
   identificacion: string;
   nombre_completo: string;
@@ -101,32 +83,32 @@ export class UserService {
       map(response => {
         console.log('📥 Raw API response:', response);
         
+        let usersArray: any[] = [];
+        
         // Si la respuesta es directamente un array
         if (response && Array.isArray(response)) {
           console.log('✅ Direct array response:', response);
-          const mappedUsers = response.map((apiUser: ApiUser) => this.mapApiUserToUser(apiUser));
-          console.log('✅ Mapped users:', mappedUsers);
-          return mappedUsers;
+          usersArray = response;
         }
-        
         // Si la respuesta tiene la estructura { success: true, data: [...] }
-        if (response && response.success && response.data && Array.isArray(response.data)) {
+        else if (response && response.success && response.data && Array.isArray(response.data)) {
           console.log('✅ Success response with data array:', response.data);
-          const mappedUsers = response.data.map((apiUser: ApiUser) => this.mapApiUserToUser(apiUser));
-          console.log('✅ Mapped users from success response:', mappedUsers);
-          return mappedUsers;
+          usersArray = response.data;
         }
-        
         // Si la respuesta tiene solo la propiedad data
-        if (response && response.data && Array.isArray(response.data)) {
+        else if (response && response.data && Array.isArray(response.data)) {
           console.log('✅ Data array response:', response.data);
-          const mappedUsers = response.data.map((apiUser: ApiUser) => this.mapApiUserToUser(apiUser));
-          console.log('✅ Mapped users from data:', mappedUsers);
-          return mappedUsers;
+          usersArray = response.data;
+        }
+        else {
+          console.log('⚠️ No valid data found, returning empty array');
+          return [];
         }
         
-        console.log('⚠️ No valid data found, returning empty array');
-        return [];
+        // Mapear los datos del API al formato esperado por el frontend
+        const mappedUsers = usersArray.map(apiUser => this.mapApiUserToUser(apiUser));
+        console.log('🔄 Mapped users:', mappedUsers);
+        return mappedUsers;
       }),
       catchError(error => {
         console.error('❌ Error fetching users:', error);
@@ -135,11 +117,9 @@ export class UserService {
     );
   }
 
-  // Mapear usuario de la API al modelo del frontend
-  private mapApiUserToUser(apiUser: ApiUser): User {
-    console.log('🔄 Mapping API user:', apiUser);
-    
-    const mappedUser: User = {
+  // Mapear datos del API al formato del frontend
+  private mapApiUserToUser(apiUser: any): User {
+    return {
       id: apiUser.Id,
       identificacion: apiUser.Identificacion,
       nombre_completo: apiUser.Nombre_completo,
@@ -148,15 +128,12 @@ export class UserService {
       nombre_perfil: apiUser.Nombre_perfil,
       estado: apiUser.Estado,
       creado_en: new Date(apiUser.Creado_en),
-      direccion: apiUser.Direccion || undefined,
-      telefono_fijo: apiUser.TelefonoFijo || undefined,
-      telefono_celular: apiUser.TelefonoCelular || undefined,
+      direccion: apiUser.Direccion,
+      telefono_fijo: apiUser.TelefonoFijo,
+      telefono_celular: apiUser.TelefonoCelular,
       fecha_nacimiento: apiUser.FechaNacimiento ? new Date(apiUser.FechaNacimiento) : undefined,
-      tipo_identificacion: apiUser.TipoIdentificacion || undefined
+      tipo_identificacion: apiUser.TipoIdentificacion
     };
-    
-    console.log('✅ Mapped user result:', mappedUser);
-    return mappedUser;
   }
 
   // Obtener usuario por ID

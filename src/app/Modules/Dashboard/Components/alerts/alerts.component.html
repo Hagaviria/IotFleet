@@ -83,7 +83,7 @@
   <!-- Alerts Table -->
   <p-card>
     @if (filteredAlerts().length > 0) {
-    <p-table [value]="filteredAlerts() || []" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+    <p-table [value]="filteredAlerts()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
       currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} alertas"
       [rowsPerPageOptions]="[5, 10, 25]" styleClass="p-datatable-sm">
       <ng-template pTemplate="header">

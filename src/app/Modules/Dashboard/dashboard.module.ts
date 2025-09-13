@@ -38,6 +38,7 @@ import { UserManagementComponent } from './Components/user-management/user-manag
 
 // Shared Components
 import { GenericFormComponent } from '../../Shared/Components/generic-form/generic-form.component';
+import { FormFieldComponent } from '../../Shared/Components/form-field/form-field.component';
 
 // Services
 import { DashboardService } from './Services/dashboard.service';
@@ -81,7 +82,8 @@ import { OfflineService } from './Services/offline.service';
     InputNumberModule,
     CheckboxModule,
     PasswordModule,
-    GenericFormComponent
+    GenericFormComponent,
+    FormFieldComponent
   ],
   providers: [
     DashboardService,

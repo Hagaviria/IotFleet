@@ -28,6 +28,7 @@ export class GenericFormComponent<
   @Output() cancel = new EventEmitter<void>();
   @Input() labelSubmit: string = 'Guardar';
   @Input() styleClass: string = '';
+  @Input() loading: boolean = false;
   @Input() showCancel = false;
 
   formGroup!: FormGroup;

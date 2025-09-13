@@ -12,7 +12,7 @@
   </div>
 
   <p-card>
-    <p-table [value]="filteredVehicles() || []" [paginator]="true" [rows]="10" [loading]="isLoading()"
+    <p-table [value]="filteredVehicles()" [paginator]="true" [rows]="10" [loading]="isLoading()"
       [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} vehículos"
       [rowsPerPageOptions]="[5, 10, 25]" styleClass="p-datatable-sm">
       <ng-template pTemplate="header">
@@ -85,7 +85,7 @@
   <!-- Dialog para crear vehículo -->
   <p-dialog header="Crear Nuevo Vehículo" [(visible)]="showCreateDialog" [modal]="true" [style]="{ width: '600px' }"
     [closable]="true" [draggable]="false" [resizable]="false">
-    <form [formGroup]="createVehicleForm" (ngSubmit)="onCreateVehicle()" *ngIf="createVehicleForm">
+    <form [formGroup]="createVehicleForm" (ngSubmit)="onCreateVehicle()">
       <div class="grid">
         <div class="col-12 md:col-6">
           <div class="field">
@@ -192,7 +192,7 @@
 
   <p-dialog header="Editar Vehículo" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '600px' }"
     [closable]="true" [draggable]="false" [resizable]="false">
-    <form [formGroup]="editVehicleForm" (ngSubmit)="onUpdateVehicle()" *ngIf="editVehicleForm">
+    <form [formGroup]="editVehicleForm" (ngSubmit)="onUpdateVehicle()">
       <div class="grid">
         <div class="col-12">
           <div class="field">

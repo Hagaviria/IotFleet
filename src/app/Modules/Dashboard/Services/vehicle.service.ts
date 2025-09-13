@@ -60,7 +60,7 @@ export class VehicleService {
       headers: this.authService.getAuthHeaders()
     }).pipe(
       map(response => {
-        if (response?.success && response.data && Array.isArray(response.data)) {
+        if (response?.success && response.data) {
           return response.data.map((vehicle: any) => this.mapApiVehicleToVehicle(vehicle));
         }
         return [];

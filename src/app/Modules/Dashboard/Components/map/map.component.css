@@ -3,7 +3,6 @@
   height: 600px;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 #map-container {
@@ -13,21 +12,15 @@
   position: relative;
 }
 
-/* MapLibre GL custom styles */
 .maplibregl-popup-content {
   padding: 0;
   border-radius: 8px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 .maplibregl-popup-close-button {
   font-size: 18px;
   color: #6b7280;
   padding: 8px;
-}
-
-.maplibregl-popup-close-button:hover {
-  color: #374151;
 }
 
 .maplibregl-marker {
@@ -39,13 +32,11 @@
   transform: scale(1.1);
 }
 
-/* Custom marker styles */
 .vehicle-marker {
   width: 20px;
   height: 20px;
   border-radius: 50%;
   border: 2px solid white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .vehicle-marker.active {
@@ -86,7 +77,6 @@
   font-size: 0.875rem;
 }
 
-/* Dialog styling */
 .p-dialog .p-dialog-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -97,7 +87,6 @@
   padding: 1.5rem;
 }
 
-/* Loading animation */
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -111,28 +100,26 @@
   animation: spin 1s linear infinite;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .map-container {
     height: 400px;
   }
-  
+
   .p-card {
     width: 200px !important;
   }
-  
+
   .absolute.top-0.left-0 {
     top: 0.5rem;
     left: 0.5rem;
   }
-  
+
   .absolute.top-0.right-0 {
     top: 0.5rem;
     right: 0.5rem;
   }
 }
 
-/* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .p-card {
     background: rgba(45, 45, 45, 0.95);

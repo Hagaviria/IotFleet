@@ -51,7 +51,7 @@ export class AlertsService {
       headers: this.authService.getAuthHeaders()
     }).pipe(
       map(response => {
-        if (response && response.success && response.data && Array.isArray(response.data)) {
+        if (response && response.success && response.data) {
           return response.data.map((item: any) => this.mapApiAlertToAlert(item));
         }
         return [];

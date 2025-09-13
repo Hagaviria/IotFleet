@@ -2,19 +2,28 @@
   <div class="absolute top-0 left-0 z-1 gap-2">
     <p-card class="w-20rem">
       <div class="gap-3">
-        <h4 class="font-semibold text-900 m-0">Filtrar Vehículos</h4>
+        <h4 class="text-900 m-0">Filtrar Vehículos</h4>
 
-        <p-dropdown [options]="vehicles()" optionLabel="name" placeholder="Seleccionar vehículo" [showClear]="true"
-          (onChange)="onVehicleSelect($event.value)" class="w-full">
+        <p-dropdown
+          [options]="vehicles()"
+          optionLabel="name"
+          placeholder="Seleccionar vehículo"
+          [showClear]="true"
+          (onChange)="onVehicleSelect($event.value)"
+          class="w-full"
+        >
           <ng-template let-vehicle pTemplate="item">
             <div class="flex align-items-center gap-2">
-              <div class="w-1rem h-1rem border-round" [style.background-color]="
+              <div
+                class="w-1rem h-1rem border-round"
+                [style.background-color]="
                   vehicle.status === 'active'
                     ? '#10b981'
                     : vehicle.status === 'inactive'
                     ? '#ef4444'
                     : '#f59e0b'
-                "></div>
+                "
+              ></div>
               <span>{{ vehicle.name }}</span>
               <span class="text-xs text-500">({{ vehicle.plate }})</span>
             </div>
@@ -22,12 +31,14 @@
         </p-dropdown>
 
         <div class="flex gap-2">
-          <p-button label="Ver Todos" icon="pi pi-eye" size="small" severity="secondary" (onClick)="onShowAllVehicles()"
-            class="flex-1">
-          </p-button>
-
-          <p-button icon="pi pi-plus" size="small" severity="info" (onClick)="onToggleGeofenceDialog()"
-            pTooltip="Crear Geofence">
+          <p-button
+            label="Ver Todos"
+            icon="pi pi-eye"
+            size="small"
+            severity="secondary"
+            (onClick)="onShowAllVehicles()"
+            class="flex-1"
+          >
           </p-button>
         </div>
       </div>
@@ -40,11 +51,15 @@
         @for (geofence of geofences(); track geofence.id) {
         <div
           class="flex align-items-center justify-content-between p-2 surface-100 border-round cursor-pointer hover:surface-200"
-          (click)="onGeofenceClick(geofence)">
+          (click)="onGeofenceClick(geofence)"
+        >
           <div class="flex align-items-center gap-2">
-            <div class="w-1rem h-1rem border-round" [style.background-color]="
+            <div
+              class="w-1rem h-1rem border-round"
+              [style.background-color]="
                 geofence.type === 'inclusion' ? '#10b981' : '#ef4444'
-              "></div>
+              "
+            ></div>
             <span class="text-sm font-medium">{{ geofence.name }}</span>
           </div>
           <span class="text-xs text-500">{{ geofence.radius }}m</span>
@@ -56,8 +71,11 @@
   </div>
 
   <!-- Map Container -->
-  <div id="map-container" class="w-full border-round"
-    style="height: 500px; background-color: #f3f4f6; border: 2px dashed #d1d5db;">
+  <div
+    id="map-container"
+    class="w-full border-round"
+    style="height: 500px; background-color: #f3f4f6; border: 2px dashed #d1d5db"
+  >
     @if (isLoading()) {
     <div class="w-full h-full flex align-items-center justify-content-center">
       <div class="text-center">
@@ -68,21 +86,20 @@
     }
   </div>
 
-  <!-- Loading Overlay -->
   @if (isLoading()) {
   <div
-    class="absolute top-0 left-0 w-full h-full surface-0 bg-opacity-75 flex align-items-center justify-content-center z-2 border-round">
+    class="absolute top-0 left-0 w-full h-full surface-0 bg-opacity-75 flex align-items-center justify-content-center z-2 border-round"
+  >
     <div class="text-center">
       <i class="pi pi-spin pi-spinner text-4xl text-blue-600 mb-4"></i>
       <p class="text-600">Cargando mapa...</p>
     </div>
   </div>
-  }
-
-  <!-- Offline Indicator -->
-  @if (!isOnline()) {
+  } @if (!isOnline()) {
   <div class="absolute top-0 right-0 z-1">
-    <div class="bg-yellow-100 border-1 border-yellow-400 text-yellow-700 px-4 py-2 border-round shadow-2">
+    <div
+      class="bg-yellow-100 border-1 border-yellow-400 text-yellow-700 px-4 py-2 border-round shadow-2"
+    >
       <div class="flex align-items-center gap-2">
         <i class="pi pi-wifi-slash text-sm"></i>
         <span class="text-sm font-medium">Modo Offline</span>
@@ -91,30 +108,49 @@
   </div>
   }
 
-  <!-- Geofence Creation Dialog -->
-  <p-dialog header="Crear Geofence" [modal]="true" [visible]="showGeofenceDialog()" [style]="{ width: '400px' }"
-    (onHide)="onToggleGeofenceDialog()">
+  <p-dialog
+    header="Crear Geofence"
+    [modal]="true"
+    [visible]="showGeofenceDialog()"
+    [style]="{ width: '400px' }"
+    (onHide)="onToggleGeofenceDialog()"
+  >
     <div class="gap-4">
       <div>
         <label class="block text-sm font-medium text-700 mb-2">Nombre</label>
-        <input type="text" [(ngModel)]="newGeofence.name"
+        <input
+          type="text"
+          [(ngModel)]="newGeofence.name"
           class="w-full px-3 py-2 border-1 border-300 border-round focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Nombre de la geofence" />
+          placeholder="Nombre de la geofence"
+        />
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-700 mb-2">Radio (metros)</label>
-        <input type="number" [(ngModel)]="newGeofence.radius"
+        <label class="block text-sm font-medium text-700 mb-2"
+          >Radio (metros)</label
+        >
+        <input
+          type="number"
+          [(ngModel)]="newGeofence.radius"
           class="w-full px-3 py-2 border-1 border-300 border-round focus:outline-none focus:ring-2 focus:ring-blue-500"
-          min="10" max="5000" />
+          min="10"
+          max="5000"
+        />
       </div>
 
       <div>
         <label class="block text-sm font-medium text-700 mb-2">Tipo</label>
-        <p-dropdown [options]="[
+        <p-dropdown
+          [options]="[
             { label: 'Inclusión', value: 'inclusion' },
             { label: 'Exclusión', value: 'exclusion' }
-          ]" optionLabel="label" optionValue="value" [(ngModel)]="newGeofence.type" class="w-full">
+          ]"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="newGeofence.type"
+          class="w-full"
+        >
         </p-dropdown>
       </div>
 
@@ -140,13 +176,21 @@
 
     <ng-template pTemplate="footer">
       <div class="flex justify-content-end gap-2">
-        <p-button label="Cancelar" severity="secondary" (onClick)="onToggleGeofenceDialog()">
+        <p-button
+          label="Cancelar"
+          severity="secondary"
+          (onClick)="onToggleGeofenceDialog()"
+        >
         </p-button>
-        <p-button label="Crear" (onClick)="onCreateGeofence()" [disabled]="
+        <p-button
+          label="Crear"
+          (onClick)="onCreateGeofence()"
+          [disabled]="
             !newGeofence.name ||
             !newGeofence.center ||
             newGeofence.center.latitude === 0
-          ">
+          "
+        >
         </p-button>
       </div>
     </ng-template>

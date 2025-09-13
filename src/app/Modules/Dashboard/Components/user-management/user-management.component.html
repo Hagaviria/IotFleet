@@ -15,7 +15,7 @@
 
     <!-- Tabla de usuarios -->
     <p-card>
-        <p-table [value]="filteredUsers() || []" [loading]="isLoading()" [paginator]="true" [rows]="10"
+        <p-table [value]="filteredUsers()" [loading]="isLoading()" [paginator]="true" [rows]="10"
             [showCurrentPageReport]="true"
             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} usuarios"
             [rowsPerPageOptions]="[10, 25, 50]" styleClass="p-datatable-sm">
@@ -100,7 +100,7 @@
     <p-dialog header="Crear Usuario" [(visible)]="showCreateDialog" [modal]="true" [style]="{width: '600px'}"
         [closable]="true" [draggable]="false" [resizable]="false">
 
-        <app-generic-form [formFields]="createUserFields" [labelSubmit]="'Crear Usuario'" [showCancel]="true"
+        <app-generic-form [formFields]="createUserFields" [loading]="isLoading()"
             (formSubmit)="onCreateUserSubmit($event)" (cancel)="cancelCreate()">
         </app-generic-form>
     </p-dialog>
@@ -109,7 +109,7 @@
     <p-dialog header="Editar Usuario" [(visible)]="showEditDialog" [modal]="true" [style]="{width: '600px'}"
         [closable]="true" [draggable]="false" [resizable]="false">
 
-        <app-generic-form [formFields]="editUserFields" [labelSubmit]="'Actualizar Usuario'" [showCancel]="true"
+        <app-generic-form [formFields]="editUserFields" [loading]="isLoading()"
             (formSubmit)="onUpdateUserSubmit($event)" (cancel)="cancelEdit()">
         </app-generic-form>
     </p-dialog>
@@ -118,8 +118,53 @@
     <p-dialog header="Cambiar Contraseña" [(visible)]="showPasswordDialog" [modal]="true" [style]="{width: '400px'}"
         [closable]="true" [draggable]="false" [resizable]="false">
 
-        <app-generic-form [formFields]="changePasswordFields" [labelSubmit]="'Cambiar Contraseña'" [showCancel]="true"
-            (formSubmit)="onChangePasswordSubmit($event)" (cancel)="cancelPasswordChange()">
-        </app-generic-form>
+        <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()">
+            <div class="field">
+                <label for="currentPassword" class="block text-sm font-medium mb-2">
+                    Contraseña Actual <span class="text-red-500">*</span>
+                </label>
+                <p-password id="currentPassword" formControlName="currentPassword" placeholder="Contraseña actual"
+                    [feedback]="false" [toggleMask]="true" class="w-full"
+                    [class.ng-invalid]="passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched">
+                </p-password>
+                @if (getFieldError(passwordForm, 'currentPassword')) {
+                <small class="text-red-500">{{ getFieldError(passwordForm, 'currentPassword') }}</small>
+                }
+            </div>
+
+            <div class="field">
+                <label for="newPassword" class="block text-sm font-medium mb-2">
+                    Nueva Contraseña <span class="text-red-500">*</span>
+                </label>
+                <p-password id="newPassword" formControlName="newPassword" placeholder="Nueva contraseña"
+                    [feedback]="false" [toggleMask]="true" class="w-full"
+                    [class.ng-invalid]="passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched">
+                </p-password>
+                @if (getFieldError(passwordForm, 'newPassword')) {
+                <small class="text-red-500">{{ getFieldError(passwordForm, 'newPassword') }}</small>
+                }
+            </div>
+
+            <div class="field">
+                <label for="confirmPassword" class="block text-sm font-medium mb-2">
+                    Confirmar Contraseña <span class="text-red-500">*</span>
+                </label>
+                <p-password id="confirmPassword" formControlName="confirmPassword" placeholder="Confirmar contraseña"
+                    [feedback]="false" [toggleMask]="true" class="w-full"
+                    [class.ng-invalid]="passwordForm.get('confirmPassword')?.invalid && passwordForm.get('confirmPassword')?.touched">
+                </p-password>
+                @if (getFieldError(passwordForm, 'confirmPassword')) {
+                <small class="text-red-500">{{ getFieldError(passwordForm, 'confirmPassword') }}</small>
+                }
+            </div>
+
+            <div class="flex justify-content-end gap-2 mt-4">
+                <p-button type="button" label="Cancelar" [text]="true" (onClick)="cancelPasswordChange()">
+                </p-button>
+                <p-button type="submit" label="Cambiar Contraseña" [disabled]="!passwordForm.valid"
+                    [loading]="isLoading()">
+                </p-button>
+            </div>
+        </form>
     </p-dialog>
 </div>
