@@ -166,6 +166,4 @@ npm test -- --testNamePattern="LoginComponent"
 
 ---
 
-*Guía creada: Enero 2024*  
-*Versión: 1.0*  
-*Para soporte: [Crear un issue](https://github.com/tu-usuario/iot-fleet-frontend/issues)*
+
