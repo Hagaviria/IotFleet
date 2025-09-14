@@ -51,7 +51,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     );
   });
 
-  // Información del usuario actual
   currentUser = computed(() => {
     const userId = this.authService.getUserId();
     const userRole = this.authService.getUserRole();
@@ -163,7 +162,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
-          console.log('WebSocket location updates not available');
         },
       });
 
@@ -177,7 +175,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
-          console.log('WebSocket sensor updates not available');
         },
       });
 
@@ -191,7 +188,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
-          console.log('WebSocket alert updates not available');
         },
       });
   }
@@ -424,7 +420,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Método para cerrar sesión
   logout(): void {
     this.confirmationService.confirm({
       message: '¿Está seguro de que desea cerrar sesión?',
@@ -439,7 +434,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
           summary: 'Sesión Cerrada',
           detail: 'Ha cerrado sesión correctamente'
         });
-        // Redirigir al login
         setTimeout(() => {
           window.location.href = '/login';
         }, 1000);

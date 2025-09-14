@@ -59,7 +59,6 @@ export class AlertsService {
       tap(alerts => this.cacheAlerts(alerts)),
       catchError(error => {
         console.error('Error fetching alerts from API:', error);
-        // Fallback a alertas simuladas si la API falla
         return this.sensorDataService.sensorData$.pipe(
           map(sensorData => this.generateSimulatedAlerts(sensorData)),
           tap(alerts => this.cacheAlerts(alerts))
@@ -71,12 +70,10 @@ export class AlertsService {
   private generateSimulatedAlerts(sensorData: any[]): Alert[] {
     const alerts: Alert[] = [];
     
-    // Generar alertas basadas en datos de sensores
     sensorData.forEach(data => {
       const vehiclePlate = data.additionalData?.vehicleInfo?.licensePlate || data.vehicleId;
       const vehicleInfo = data.additionalData?.vehicleInfo;
       
-      // Alerta de combustible bajo
       if (data.fuelLevel && data.fuelLevel < 20) {
         alerts.push({
           id: `fuel_${data.vehicleId}_${Date.now()}`,
@@ -91,7 +88,6 @@ export class AlertsService {
         });
       }
       
-      // Alerta de temperatura alta
       if (data.temperature && data.temperature > 80) {
         alerts.push({
           id: `temp_${data.vehicleId}_${Date.now()}`,
@@ -106,7 +102,6 @@ export class AlertsService {
         });
       }
       
-      // Alerta de velocidad alta
       if (data.speed && data.speed > 100) {
         alerts.push({
           id: `speed_${data.vehicleId}_${Date.now()}`,
@@ -121,7 +116,6 @@ export class AlertsService {
         });
       }
       
-      // Alerta de consumo de combustible alto
       if (data.additionalData?.fuelConsumption && data.additionalData.fuelConsumption > 15) {
         alerts.push({
           id: `consumption_${data.vehicleId}_${Date.now()}`,
@@ -136,7 +130,6 @@ export class AlertsService {
         });
       }
       
-      // Alerta de mantenimiento próximo
       if (vehicleInfo?.lastMaintenance) {
         const daysSinceMaintenance = Math.floor((Date.now() - vehicleInfo.lastMaintenance.getTime()) / (1000 * 60 * 60 * 24));
         if (daysSinceMaintenance > 180) { // 6 meses
@@ -182,7 +175,6 @@ export class AlertsService {
     return this.http.post<Alert>(`${this.API_BASE_URL}/alerts`, alert);
   }
 
-  // Métodos para alertas predictivas
   generatePredictiveAlerts(): Observable<Alert[]> {
     return this.http.post<Alert[]>(`${this.API_BASE_URL}/alerts/predictive/generate`, {});
   }
@@ -200,7 +192,6 @@ export class AlertsService {
   }
 
   private setupWebSocketAlerts(): void {
-    // Escuchar alertas en tiempo real desde WebSocket
     this.webSocketService.getAlertUpdates().subscribe(update => {
       if (update.alert) {
         const alert: Alert = {
@@ -219,7 +210,6 @@ export class AlertsService {
       }
     });
 
-    // Escuchar alertas de combustible específicamente
     this.webSocketService.getFuelAlerts().subscribe(update => {
       if (update.alert) {
         const fuelAlert: Alert = {
@@ -240,7 +230,6 @@ export class AlertsService {
   }
 
   private setupFuelPredictions(): void {
-    // Escuchar predicciones de combustible del servicio de sensores
     this.sensorDataService.fuelPredictions$.subscribe(predictions => {
       const fuelAlerts: Alert[] = [];
       
@@ -308,7 +297,6 @@ export class AlertsService {
     this.unreadCountSubject.next(unreadCount);
   }
 
-  // Métodos para funcionalidad offline
   getCachedAlerts(): Alert[] {
     const cached = localStorage.getItem('dashboard_alerts');
     return cached ? JSON.parse(cached) : [];
@@ -322,7 +310,6 @@ export class AlertsService {
     localStorage.removeItem('dashboard_alerts');
   }
 
-  // Métodos de utilidad
   getAlertIcon(type: string): string {
     switch (type) {
       case 'speed': return 'pi pi-tachometer';
@@ -396,7 +383,6 @@ export class AlertsService {
     }
   }
 
-  // Métodos para obtener estadísticas de alertas
   getAlertStatistics(): Observable<any> {
     return this.http.get<any>(`${this.API_BASE_URL}/Alerts/fuel-alerts/statistics`, {
       headers: this.authService.getAuthHeaders()
@@ -409,7 +395,6 @@ export class AlertsService {
     );
   }
 
-  // Método para calcular alerta de combustible para un vehículo específico
   calculateFuelAlert(vehicleId: string): Observable<any> {
     return this.http.post<any>(`${this.API_BASE_URL}/Alerts/fuel-alerts/calculate/${vehicleId}`, {}, {
       headers: this.authService.getAuthHeaders()
@@ -422,7 +407,6 @@ export class AlertsService {
     );
   }
 
-  // Método para obtener alertas recientes de un vehículo
   getVehicleRecentAlerts(vehicleId: string, hours: number = 24): Observable<any[]> {
     return this.http.get<any>(`${this.API_BASE_URL}/Alerts/vehicle/${vehicleId}/recent?hours=${hours}`, {
       headers: this.authService.getAuthHeaders()

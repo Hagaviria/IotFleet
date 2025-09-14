@@ -4,7 +4,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { DashboardRoutingModule } from './dashboard-routing.module';
 
-// PrimeNG Modules
 import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
 import { ButtonModule } from 'primeng/button';
@@ -26,7 +25,6 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { PasswordModule } from 'primeng/password';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
-// Components
 import { DashboardComponent } from './Components/dashboard/dashboard.component';
 import { MapComponent } from './Components/map/map.component';
 import { HistoricalChartsComponent } from './Components/historical-charts/historical-charts.component';
@@ -36,12 +34,10 @@ import { VehicleManagementComponent } from './Components/vehicle-management/vehi
 import { SensorDataManagementComponent } from './Components/sensor-data-management/sensor-data-management.component';
 import { UserManagementComponent } from './Components/user-management/user-management.component';
 
-// Shared Components
 import { GenericFormComponent } from '../../Shared/Components/generic-form/generic-form.component';
 import { FormFieldComponent } from '../../Shared/Components/form-field/form-field.component';
 import { GenericTableComponent } from '../../Shared/Components/generic-table/generic-table.component';
 
-// Services
 import { DashboardService } from './Services/dashboard.service';
 import { MapService } from './Services/map.service';
 import { AlertsService } from './Services/alerts.service';

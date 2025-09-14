@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Subject, takeUntil } from 'rxjs';
 
-// PrimeNG
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -13,11 +12,9 @@ import { ToastModule } from 'primeng/toast';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 
-// Shared Components
 import { GenericFormComponent } from '../../../../Shared/Components/generic-form/generic-form.component';
 import { FormFieldBase } from '../../../../Shared/Models/forms/form-field-base';
 
-// Services
 import { VehicleService, Vehicle } from '../../Services/vehicle.service';
 import { AuthService } from '../../../../Security/Services/auth.service';
 
@@ -42,16 +39,13 @@ export interface SensorDataRequest {
 export class SensorDataManagementComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  // Signals
   vehicles = signal<Vehicle[]>([]);
   showCreateDialog = signal<boolean>(false);
   isLoading = signal<boolean>(false);
   isSimulating = signal<boolean>(false);
 
-  // Forms
   sensorDataFields: FormFieldBase<string>[] = [];
 
-  // Computed
   isAdmin = computed(() => this.authService.isAdmin());
 
   constructor(
@@ -72,7 +66,6 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
   }
 
   private initializeFormFields(): void {
-    console.log('🔧 Initializing sensor data form fields...');
     this.sensorDataFields = [
       new FormFieldBase({ key: 'vehicleId', label: 'Vehículo', required: true, controlType: 'dropdown', order: 1 }),
       new FormFieldBase({ key: 'latitude', label: 'Latitud', required: true, controlType: 'textbox', type: 'number', value: '4.6097100', order: 2 }),
@@ -84,10 +77,8 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
       new FormFieldBase({ key: 'engineTemperature', label: 'Temperatura del Motor (°C)', required: true, controlType: 'textbox', type: 'number', value: '85', order: 8 }),
       new FormFieldBase({ key: 'ambientTemperature', label: 'Temperatura Ambiente (°C)', required: true, controlType: 'textbox', type: 'number', value: '22', order: 9 })
     ];
-    console.log('✅ Sensor data form fields initialized successfully');
   }
 
-  // Cargar vehículos
   loadVehicles(): void {
     this.vehicleService.getVehicles()
       .pipe(takeUntil(this.destroy$))
@@ -106,21 +97,17 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
       value: `${v.plate} - ${v.brand} ${v.model}`
     }));
     
-    // Actualizar las opciones del dropdown de vehículos
     const vehicleField = this.sensorDataFields.find(field => field.key === 'vehicleId');
     if (vehicleField) {
       vehicleField.options = vehicleOptions;
     }
   }
 
-  // Mostrar dialog para crear sensor data
   showCreateSensorDataDialog(): void {
     this.showCreateDialog.set(true);
   }
 
-  // Crear sensor data
   onCreateSensorDataSubmit(formData: Record<string, any>): void {
-    console.log('📝 Create sensor data form submitted:', formData);
     this.isLoading.set(true);
     const sensorData: SensorDataRequest = {
       vehicleId: formData['vehicleId'],
@@ -134,7 +121,6 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
       ambientTemperature: parseFloat(formData['ambientTemperature'])
     };
 
-    // Simular envío al backend
     this.sendSensorDataToBackend(sensorData).subscribe({
       next: () => {
         this.messageService.add({
@@ -157,7 +143,6 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Enviar datos al backend
   private sendSensorDataToBackend(sensorData: SensorDataRequest) {
     const API_BASE_URL = 'https://localhost:7162/api';
     
@@ -166,7 +151,6 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Simular datos automáticamente
   startSimulation(): void {
     if (this.vehicles().length === 0) {
       this.messageService.add({
@@ -184,7 +168,6 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
       detail: 'Generando datos de sensores cada 5 segundos'
     });
 
-    // Simular datos cada 5 segundos
     const interval = setInterval(() => {
       if (!this.isSimulating()) {
         clearInterval(interval);
@@ -206,7 +189,6 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
 
       this.sendSensorDataToBackend(simulatedData).subscribe({
         next: () => {
-          console.log('Datos simulados enviados:', simulatedData);
         },
         error: (error) => {
           console.error('Error enviando datos simulados:', error);
@@ -215,7 +197,6 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
     }, 5000);
   }
 
-  // Detener simulación
   stopSimulation(): void {
     this.isSimulating.set(false);
     this.messageService.add({
@@ -225,13 +206,11 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Cancelar operación
   cancelCreate(): void {
     this.showCreateDialog.set(false);
   }
 
 
-  // Obtener nombre del vehículo
   getVehicleName(vehicleId: string): string {
     const vehicle = this.vehicles().find(v => v.id === vehicleId);
     return vehicle ? vehicle.name : 'Vehículo no encontrado';

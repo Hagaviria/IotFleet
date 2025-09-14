@@ -43,7 +43,6 @@ export class DashboardService {
       }
     });
 
-    // Actualizar ubicaciones en tiempo real
     interval(10000).pipe( // Cada 10 segundos
       switchMap(() => this.getCurrentLocations()),
       catchError(error => {
@@ -77,7 +76,6 @@ export class DashboardService {
       tap(stats => this.cacheStats(stats)),
       catchError(error => {
         console.error('Error fetching dashboard stats:', error);
-        // Intentar usar datos en caché si hay error
         const cachedStats = this.getCachedStats();
         return cachedStats ? of(cachedStats) : throwError(error);
       })
@@ -143,7 +141,6 @@ export class DashboardService {
     }).pipe(
       map(response => {
         if (response && response.success && response.data) {
-          // Filtrar datos por vehículo y rango de fechas
           const filteredData = response.data.filter((item: any) => {
             const itemDate = new Date(item.Timestamp);
             return item.VehicleId === vehicleId && 
@@ -151,7 +148,6 @@ export class DashboardService {
                    itemDate <= endDate;
           });
           
-          // Convertir a formato HistoricalData
           return filteredData.map((item: any) => ({
             id: item.Id,
             vehicleId: item.VehicleId,
@@ -251,7 +247,6 @@ export class DashboardService {
     });
   }
 
-  // Métodos para funcionalidad offline
   getCachedStats(): DashboardStats | null {
     const cached = localStorage.getItem('dashboard_stats');
     return cached ? JSON.parse(cached) : null;

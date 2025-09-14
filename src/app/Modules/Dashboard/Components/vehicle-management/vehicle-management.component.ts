@@ -2,7 +2,6 @@ import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 
-// PrimeNG
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -13,11 +12,9 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 
-// Shared Components
 import { GenericFormComponent } from '../../../../Shared/Components/generic-form/generic-form.component';
 import { FormFieldBase } from '../../../../Shared/Models/forms/form-field-base';
 
-// Services
 import { VehicleService, Vehicle, CreateVehicleRequest, UpdateVehicleRequest } from '../../Services/vehicle.service';
 import { AuthService } from '../../../../Security/Services/auth.service';
 
@@ -30,18 +27,15 @@ import { AuthService } from '../../../../Security/Services/auth.service';
 export class VehicleManagementComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  // Signals
   vehicles = signal<Vehicle[]>([]);
   selectedVehicle = signal<Vehicle | null>(null);
   showCreateDialog = signal<boolean>(false);
   showEditDialog = signal<boolean>(false);
   isLoading = signal<boolean>(false);
 
-  // Forms
   createVehicleFields: FormFieldBase<string>[] = [];
   editVehicleFields: FormFieldBase<string>[] = [];
 
-  // Computed
   isAdmin = computed(() => this.authService.isAdmin());
   filteredVehicles = computed(() => {
     const vehicles = this.vehicles();
@@ -66,7 +60,6 @@ export class VehicleManagementComponent implements OnInit, OnDestroy {
   }
 
   private initializeFormFields(): void {
-    console.log('🔧 Initializing vehicle form fields...');
     this.createVehicleFields = [
       new FormFieldBase({ key: 'licensePlate', label: 'Placa del Vehículo', required: true, controlType: 'textbox', order: 1 }),
       new FormFieldBase({ key: 'brand', label: 'Marca', required: true, controlType: 'textbox', order: 2 }),
@@ -74,10 +67,8 @@ export class VehicleManagementComponent implements OnInit, OnDestroy {
       new FormFieldBase({ key: 'fuelCapacity', label: 'Capacidad de Combustible (L)', required: true, controlType: 'textbox', type: 'number', order: 4 }),
       new FormFieldBase({ key: 'averageConsumption', label: 'Consumo Promedio (L/100km)', required: true, controlType: 'textbox', type: 'number', order: 5 })
     ];
-    console.log('✅ Vehicle form fields initialized successfully');
   }
 
-  // Cargar vehículos
   loadVehicles(): void {
     this.isLoading.set(true);
     this.vehicleService.getVehicles()
@@ -99,14 +90,11 @@ export class VehicleManagementComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Mostrar dialog para crear vehículo
   showCreateVehicleDialog(): void {
     this.showCreateDialog.set(true);
   }
 
-  // Crear nuevo vehículo
   onCreateVehicleSubmit(formData: Record<string, any>): void {
-    console.log('📝 Create vehicle form submitted:', formData);
     this.isLoading.set(true);
     const vehicleData: CreateVehicleRequest = {
       licensePlate: formData['licensePlate'],
@@ -141,7 +129,6 @@ export class VehicleManagementComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Mostrar dialog para editar vehículo
   showEditVehicleDialog(vehicle: Vehicle): void {
     this.selectedVehicle.set(vehicle);
     this.editVehicleFields = [
@@ -153,9 +140,7 @@ export class VehicleManagementComponent implements OnInit, OnDestroy {
     this.showEditDialog.set(true);
   }
 
-  // Actualizar vehículo
   onUpdateVehicleSubmit(formData: Record<string, any>): void {
-    console.log('📝 Update vehicle form submitted:', formData);
     if (this.selectedVehicle()) {
       this.isLoading.set(true);
       const vehicleData: UpdateVehicleRequest = {
@@ -192,7 +177,6 @@ export class VehicleManagementComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Eliminar vehículo
   deleteVehicle(vehicle: Vehicle): void {
     this.confirmationService.confirm({
       message: `¿Está seguro de que desea eliminar el vehículo ${vehicle.plate}?`,
@@ -227,7 +211,6 @@ export class VehicleManagementComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Cancelar operaciones
   cancelCreate(): void {
     this.showCreateDialog.set(false);
   }
@@ -237,7 +220,6 @@ export class VehicleManagementComponent implements OnInit, OnDestroy {
     this.selectedVehicle.set(null);
   }
 
-  // Obtener severidad del estado
   getStatusSeverity(status: string): string {
     switch (status) {
       case 'active': return 'success';
@@ -247,7 +229,6 @@ export class VehicleManagementComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Obtener etiqueta del estado
   getStatusLabel(status: string): string {
     switch (status) {
       case 'active': return 'Activo';

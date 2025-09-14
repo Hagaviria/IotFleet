@@ -1,7 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-// PrimeNG
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -197,7 +196,6 @@ export class GenericTableComponent {
   }
 
   getTagValue(item: any, key: string): string {
-    // Lógica para obtener el valor del tag basado en el tipo de dato
     const value = item[key];
     if (typeof value === 'boolean') {
       return value ? 'Activo' : 'Inactivo';
@@ -216,7 +214,6 @@ export class GenericTableComponent {
   }
 
   getTagSeverity(item: any, key: string): string {
-    // Lógica para obtener la severidad del tag basado en el valor
     const value = item[key];
     if (typeof value === 'boolean') {
       return value ? 'success' : 'danger';

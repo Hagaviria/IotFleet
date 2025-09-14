@@ -17,7 +17,6 @@ export class AuthService {
   userState$: Observable<boolean> = this.isLoggedIn.asObservable();
   userRole$: Observable<string> = this.userRole.asObservable();
 
-  // URL base de tu API
   private readonly API_BASE_URL = 'https://localhost:7162/api';
 
   constructor() {}
@@ -50,34 +49,16 @@ export class AuthService {
   login(email: string, password: string): Observable<boolean> {
     const loginData = { Email: email, Password: password };
     
-    console.log('Enviando login request:', {
-      url: `${this.API_BASE_URL}/Login`,
-      data: loginData
-    });
-    
     return this.http.post<any>(`${this.API_BASE_URL}/Login`, loginData).pipe(
       map((response) => {
-        console.log('Login response completa:', response);
-        console.log('Tipo de respuesta:', typeof response);
-        console.log('Claves de la respuesta:', Object.keys(response || {}));
-        
-        // Verificar si la respuesta es exitosa y tiene datos
         if (response && response.success && response.data) {
           const data = response.data;
-          console.log('Datos del usuario:', data);
           
-          // Extraer el token y datos del usuario
           const token = data.Token;
           const role = data.NombrePerfil || 'user';
           const userId = data.Identificacion || '';
           const email = data.Correo || '';
           const name = data.Nombre || '';
-          
-          console.log('Token encontrado:', token);
-          console.log('Rol encontrado:', role);
-          console.log('User ID encontrado:', userId);
-          console.log('Email encontrado:', email);
-          console.log('Nombre encontrado:', name);
           
           if (token) {
             if (isPlatformBrowser(this.platformId)) {
@@ -87,7 +68,6 @@ export class AuthService {
                 window.localStorage.setItem(this.USER_ID_KEY, userId);
                 window.localStorage.setItem('user_email', email);
                 window.localStorage.setItem('user_name', name);
-                console.log('Datos guardados en localStorage');
               } catch (error) {
                 console.error('Error guardando en localStorage:', error);
               }
@@ -99,14 +79,10 @@ export class AuthService {
           }
         }
         
-        console.log('No se encontró token en la respuesta o la respuesta no fue exitosa');
         return false;
       }),
       catchError((error) => {
         console.error('Error completo en login:', error);
-        console.error('Status:', error.status);
-        console.error('Message:', error.message);
-        console.error('Error body:', error.error);
         return of(false);
       })
     );

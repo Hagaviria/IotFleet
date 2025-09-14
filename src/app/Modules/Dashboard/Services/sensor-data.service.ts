@@ -51,7 +51,6 @@ export class SensorDataService {
   }
 
   private startRealTimeUpdates(): void {
-    // Actualizar datos de sensores cada 15 segundos
     interval(this.REFRESH_INTERVAL).pipe(
       switchMap(() => this.getRecentSensorData()),
       catchError(error => {
@@ -64,7 +63,6 @@ export class SensorDataService {
     });
   }
 
-  // CRUD operations para datos de sensores
   getSensorData(): Observable<SensorData[]> {
     return this.http.get<SensorData[]>(`${this.API_BASE_URL}/SensorData`, {
       headers: this.authService.getAuthHeaders()
@@ -125,11 +123,9 @@ export class SensorDataService {
     });
   }
 
-  // Métodos para cálculo predictivo de combustible
   private updateFuelPredictions(sensorData: SensorData[]): void {
     const predictions: FuelPrediction[] = [];
     
-    // Agrupar datos por vehículo
     const vehicleData = this.groupByVehicle(sensorData);
     
     Object.keys(vehicleData).forEach(vehicleId => {
@@ -150,13 +146,10 @@ export class SensorDataService {
     const latestData = sensorData[sensorData.length - 1];
     const currentFuelLevel = latestData.fuelLevel || 0;
     
-    // Calcular consumo promedio basado en datos históricos
     const consumptionRate = this.calculateFuelConsumptionRate(sensorData);
     
-    // Estimar autonomía en horas
     const estimatedAutonomyHours = currentFuelLevel / consumptionRate;
     
-    // Determinar nivel de alerta
     let alertLevel: 'normal' | 'warning' | 'critical' = 'normal';
     let isLowFuel = false;
     
@@ -181,11 +174,9 @@ export class SensorDataService {
   private calculateFuelConsumptionRate(sensorData: SensorData[]): number {
     if (sensorData.length < 2) return 0.1; // Valor por defecto
     
-    // Filtrar datos con nivel de combustible
     const fuelData = sensorData.filter(data => data.fuelLevel !== undefined);
     if (fuelData.length < 2) return 0.1;
     
-    // Calcular consumo promedio por hora
     const timeDiff = (fuelData[fuelData.length - 1].timestamp.getTime() - fuelData[0].timestamp.getTime()) / (1000 * 60 * 60); // horas
     const fuelDiff = fuelData[0].fuelLevel! - fuelData[fuelData.length - 1].fuelLevel!;
     
@@ -235,7 +226,6 @@ export class SensorDataService {
     };
   }
 
-  // Métodos para funcionalidad offline
   private cacheSensorData(data: SensorData[]): void {
     localStorage.setItem('sensor_data', JSON.stringify(data));
   }
@@ -259,7 +249,6 @@ export class SensorDataService {
     localStorage.removeItem('fuel_predictions');
   }
 
-  // Método para obtener alertas de combustible
   getFuelAlerts(): FuelPrediction[] {
     return this.fuelPredictionsSubject.value.filter(prediction => prediction.isLowFuel);
   }

@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 
-// PrimeNG
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -13,12 +12,10 @@ import { ToastModule } from 'primeng/toast';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 
-// Shared Components
 import { GenericFormComponent } from '../../../../Shared/Components/generic-form/generic-form.component';
 import { GenericTableComponent, TableConfig } from '../../../../Shared/Components/generic-table/generic-table.component';
 import { FormFieldBase } from '../../../../Shared/Models/forms/form-field-base';
 
-// Services
 import { UserService, User, CreateUserRequest, UpdateUserRequest, ChangePasswordRequest } from '../../Services/user.service';
 import { AuthService } from '../../../../Security/Services/auth.service';
 
@@ -31,7 +28,6 @@ import { AuthService } from '../../../../Security/Services/auth.service';
 export class UserManagementComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  // Signals
   users = signal<User[]>([]);
   showCreateDialog = signal<boolean>(false);
   showEditDialog = signal<boolean>(false);
@@ -39,12 +35,10 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   isLoading = signal<boolean>(false);
   selectedUser = signal<User | null>(null);
 
-  // Forms
   passwordForm: FormGroup;
   createUserFields: FormFieldBase<string>[] = [];
   editUserFields: FormFieldBase<string>[] = [];
 
-  // Table Configuration
   tableConfig: TableConfig = {
     columns: [
       { key: 'identificacion', label: 'Identificación', type: 'text', width: '150px' },
@@ -62,11 +56,9 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     emptyIcon: 'pi pi-users'
   };
 
-  // Options
   profileOptions: any[] = [];
   identificationTypeOptions: any[] = [];
 
-  // Computed
   isAdmin = computed(() => this.authService.isAdmin());
   filteredUsers = computed(() => {
     const users = this.users();
@@ -80,7 +72,6 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) {
-    // Formulario para cambiar contraseña
     this.passwordForm = this.fb.group({
       currentPassword: ['', [Validators.required]],
       newPassword: ['', [Validators.required, Validators.minLength(6)]],
@@ -101,7 +92,6 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   }
 
   private initializeFormFields(): void {
-    console.log('🔧 Initializing user form fields...');
     this.createUserFields = [
       new FormFieldBase({ key: 'identificacion', label: 'Identificación', required: true, controlType: 'textbox', order: 1 }),
       new FormFieldBase({ key: 'tipo_identificacion', label: 'Tipo de Identificación', required: true, controlType: 'dropdown', options: this.identificationTypeOptions.map(opt => ({ key: opt.value, value: opt.label })), order: 2 }),
@@ -115,19 +105,15 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       new FormFieldBase({ key: 'telefono_celular', label: 'Teléfono Celular', required: false, controlType: 'textbox', order: 10 }),
       new FormFieldBase({ key: 'estado', label: 'Usuario Activo', required: false, controlType: 'checkbox', value: 'true', order: 11 })
     ];
-    console.log('✅ User form fields initialized successfully');
   }
 
 
-  // Cargar usuarios
   loadUsers(): void {
-    console.log('🔄 Loading users...');
     this.isLoading.set(true);
     this.userService.getUsers()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (users) => {
-          console.log('✅ Users loaded:', users);
           this.users.set(Array.isArray(users) ? users : []);
           this.isLoading.set(false);
         },
@@ -143,12 +129,10 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Mostrar dialog para crear usuario
   showCreateUserDialog(): void {
     this.showCreateDialog.set(true);
   }
 
-  // Mostrar dialog para editar usuario
   showEditUserDialog(user: User): void {
     this.selectedUser.set(user);
     this.editUserFields = [
@@ -166,7 +150,6 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     this.showEditDialog.set(true);
   }
 
-  // Mostrar dialog para cambiar contraseña
   showChangePasswordDialog(user: User): void {
     this.selectedUser.set(user);
     if (this.passwordForm) {
@@ -175,9 +158,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     this.showPasswordDialog.set(true);
   }
 
-  // Crear usuario
   onCreateUserSubmit(formData: Record<string, any>): void {
-    console.log('📝 Create user form submitted:', formData);
     this.isLoading.set(true);
     const userData: CreateUserRequest = {
       identificacion: formData['identificacion'],
@@ -218,9 +199,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Actualizar usuario
   onUpdateUserSubmit(formData: Record<string, any>): void {
-    console.log('📝 Update user form submitted:', formData);
     if (this.selectedUser()) {
       this.isLoading.set(true);
       const userData: UpdateUserRequest = {
@@ -263,7 +242,6 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Cambiar contraseña
   onChangePassword(): void {
     if (this.passwordForm && this.passwordForm.valid && this.selectedUser()) {
       this.isLoading.set(true);
@@ -302,7 +280,6 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Eliminar usuario
   onDeleteUser(user: User): void {
     this.confirmationService.confirm({
       message: `¿Estás seguro de que quieres eliminar al usuario "${user.nombre_completo}"?`,
@@ -338,7 +315,6 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Cancelar operaciones
   cancelCreate(): void {
     this.showCreateDialog.set(false);
   }
@@ -356,7 +332,6 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Validadores
   private passwordMatchValidator(form: FormGroup) {
     const newPassword = form.get('newPassword');
     const confirmPassword = form.get('confirmPassword');
@@ -371,7 +346,6 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   }
 
 
-  // Obtener mensaje de error para un campo
   getFieldError(form: FormGroup, fieldName: string): string {
     if (!form) return '';
     const field = form.get(fieldName);
@@ -384,50 +358,36 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     return '';
   }
 
-  // Obtener nombre del perfil
   getProfileName(profileId: number): string {
-    console.log('🔍 Getting profile name for ID:', profileId);
-    console.log('📋 Available profile options:', this.profileOptions);
     const profile = this.profileOptions.find(p => p.value === profileId);
-    console.log('✅ Found profile:', profile);
     return profile ? profile.label : 'Desconocido';
   }
 
-  // Obtener color del estado
   getStatusColor(status: boolean): string {
     return status ? 'success' : 'danger';
   }
 
-  // Obtener texto del estado
   getStatusText(status: boolean): string {
-    console.log('🔍 Getting status text for:', status);
     return status ? 'Activo' : 'Inactivo';
   }
 
-  // Formatear fecha
   formatDate(date: Date | string): string {
-    console.log('🔍 Formatting date:', date);
     try {
       const d = new Date(date);
       if (isNaN(d.getTime())) {
-        console.log('❌ Invalid date:', date);
         return 'Fecha inválida';
       }
       const formatted = d.toLocaleDateString('es-ES');
-      console.log('✅ Formatted date:', formatted);
       return formatted;
     } catch (error) {
-      console.log('❌ Error formatting date:', error);
       return 'Fecha inválida';
     }
   }
 
-  // Obtener fecha actual para el calendario
   getCurrentDate(): Date {
     return new Date();
   }
 
-  // Manejar acciones de la tabla
   onTableAction(event: { action: string; item: any }): void {
     const { action, item } = event;
     switch (action) {

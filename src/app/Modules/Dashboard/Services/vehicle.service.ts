@@ -54,7 +54,6 @@ export class VehicleService {
     this.loadVehicles();
   }
 
-  // Obtener todos los vehículos
   getVehicles(): Observable<Vehicle[]> {
     return this.http.get<any>(`${this.API_BASE_URL}/Dashboard/vehicle-status`, {
       headers: this.authService.getAuthHeaders()
@@ -73,7 +72,6 @@ export class VehicleService {
     );
   }
 
-  // Crear nuevo vehículo
   createVehicle(vehicleData: CreateVehicleRequest): Observable<Vehicle> {
     return this.http.post<any>(`${this.API_BASE_URL}/Vehicle`, vehicleData, {
       headers: this.authService.getAuthHeaders()
@@ -81,7 +79,6 @@ export class VehicleService {
       map(response => {
         if (response?.success && response.data) {
           const newVehicle = this.mapApiVehicleToVehicle(response.data);
-          // Actualizar la lista local
           const currentVehicles = this.vehiclesSubject.value;
           this.vehiclesSubject.next([...currentVehicles, newVehicle]);
           return newVehicle;
@@ -95,7 +92,6 @@ export class VehicleService {
     );
   }
 
-  // Actualizar vehículo
   updateVehicle(id: string, vehicleData: UpdateVehicleRequest): Observable<Vehicle> {
     return this.http.put<any>(`${this.API_BASE_URL}/Vehicle/${id}`, vehicleData, {
       headers: this.authService.getAuthHeaders()
@@ -103,7 +99,6 @@ export class VehicleService {
       map(response => {
         if (response?.success && response.data) {
           const updatedVehicle = this.mapApiVehicleToVehicle(response.data);
-          // Actualizar la lista local
           const currentVehicles = this.vehiclesSubject.value;
           const index = currentVehicles.findIndex(v => v.id === id);
           if (index !== -1) {
@@ -121,13 +116,11 @@ export class VehicleService {
     );
   }
 
-  // Eliminar vehículo
   deleteVehicle(id: string): Observable<void> {
     return this.http.delete<any>(`${this.API_BASE_URL}/Vehicle/${id}`, {
       headers: this.authService.getAuthHeaders()
     }).pipe(
       map(() => {
-        // Remover de la lista local
         const currentVehicles = this.vehiclesSubject.value;
         const filteredVehicles = currentVehicles.filter(v => v.id !== id);
         this.vehiclesSubject.next(filteredVehicles);
@@ -139,7 +132,6 @@ export class VehicleService {
     );
   }
 
-  // Obtener vehículo por ID
   getVehicleById(id: string): Observable<Vehicle> {
     return this.http.get<any>(`${this.API_BASE_URL}/Vehicle/${id}`, {
       headers: this.authService.getAuthHeaders()
@@ -157,12 +149,10 @@ export class VehicleService {
     );
   }
 
-  // Cargar vehículos al inicializar el servicio
   private loadVehicles(): void {
     this.getVehicles().subscribe();
   }
 
-  // Mapear datos de la API al modelo del frontend
   private mapApiVehicleToVehicle(apiVehicle: any): Vehicle {
     return {
       id: apiVehicle.Id,
@@ -182,7 +172,6 @@ export class VehicleService {
     };
   }
 
-  // Obtener vehículos actuales (sincrónico)
   getCurrentVehicles(): Vehicle[] {
     return this.vehiclesSubject.value;
   }

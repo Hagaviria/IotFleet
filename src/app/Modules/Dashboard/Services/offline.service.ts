@@ -44,26 +44,22 @@ export class OfflineService {
     try {
       this.db = await openDB<AppDB>('dashboard-offline', 1, {
         upgrade(db) {
-          // Locations store
           if (!db.objectStoreNames.contains('locations')) {
             const locationStore = db.createObjectStore('locations', { keyPath: 'id' });
             locationStore.createIndex('by-vehicle', 'vehicleId');
             locationStore.createIndex('by-timestamp', 'timestamp');
           }
 
-          // Alerts store
           if (!db.objectStoreNames.contains('alerts')) {
             const alertStore = db.createObjectStore('alerts', { keyPath: 'id' });
             alertStore.createIndex('by-vehicle', 'vehicleId');
             alertStore.createIndex('by-timestamp', 'timestamp');
           }
 
-          // Vehicles store
           if (!db.objectStoreNames.contains('vehicles')) {
             db.createObjectStore('vehicles', { keyPath: 'id' });
           }
 
-          // Stats store
           if (!db.objectStoreNames.contains('stats')) {
             db.createObjectStore('stats', { keyPath: 'id' });
           }
@@ -88,12 +84,10 @@ export class OfflineService {
       });
   }
 
-  // Métodos para almacenar datos offline
   async storeLocation(location: any): Promise<void> {
     if (this.db) {
       await this.db.add('locations', location);
     } else {
-      // Fallback a localStorage
       const locations = this.getCachedLocations();
       locations.push(location);
       localStorage.setItem('offline_locations', JSON.stringify(locations));
@@ -104,7 +98,6 @@ export class OfflineService {
     if (this.db) {
       await this.db.add('alerts', alert);
     } else {
-      // Fallback a localStorage
       const alerts = this.getCachedAlerts();
       alerts.push(alert);
       localStorage.setItem('offline_alerts', JSON.stringify(alerts));
@@ -115,7 +108,6 @@ export class OfflineService {
     if (this.db) {
       await this.db.put('vehicles', vehicle);
     } else {
-      // Fallback a localStorage
       const vehicles = this.getCachedVehicles();
       const index = vehicles.findIndex(v => v.id === vehicle.id);
       if (index !== -1) {
@@ -131,12 +123,10 @@ export class OfflineService {
     if (this.db) {
       await this.db.put('stats', { id: 'current', ...stats });
     } else {
-      // Fallback a localStorage
       localStorage.setItem('offline_stats', JSON.stringify(stats));
     }
   }
 
-  // Métodos para recuperar datos offline
   async getStoredLocations(vehicleId?: string): Promise<any[]> {
     if (this.db) {
       if (vehicleId) {
@@ -178,24 +168,15 @@ export class OfflineService {
     }
   }
 
-  // Métodos de sincronización
   private async syncPendingData(): Promise<void> {
     if (!this.isOnlineSubject.value) return;
 
     try {
-      // Aquí implementarías la lógica para sincronizar datos pendientes
-      // con el servidor cuando se recupere la conexión
-      console.log('Syncing pending data...');
       
-      // Ejemplo de sincronización
       const pendingLocations = await this.getStoredLocations();
       const pendingAlerts = await this.getStoredAlerts();
       
-      // Procesar y enviar datos pendientes
-      // await this.syncLocations(pendingLocations);
-      // await this.syncAlerts(pendingAlerts);
       
-      // Limpiar datos sincronizados
       await this.clearSyncedData();
       
     } catch (error) {
@@ -213,7 +194,6 @@ export class OfflineService {
     }
   }
 
-  // Métodos de fallback para localStorage
   private getCachedLocations(): any[] {
     const cached = localStorage.getItem('offline_locations');
     return cached ? JSON.parse(cached) : [];
@@ -229,7 +209,6 @@ export class OfflineService {
     return cached ? JSON.parse(cached) : [];
   }
 
-  // Métodos de utilidad
   isOnline(): boolean {
     return this.isOnlineSubject.value;
   }

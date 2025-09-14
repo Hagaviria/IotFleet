@@ -89,7 +89,6 @@ export class WebSocketService {
       this.joinFleetGroup();
     };
 
-    // Evento de mensaje recibido
     this.ws.onmessage = (event) => {
       try {
         const message: WebSocketMessage = JSON.parse(event.data);
@@ -112,7 +111,6 @@ export class WebSocketService {
       this.isConnecting = false;
       this.connectionStatusSubject.next('disconnected');
       
-      // Intentar reconectar si no fue un cierre intencional
       if (event.code !== 1000 && this.reconnectAttempts < this.MAX_RECONNECT_ATTEMPTS) {
         this.scheduleReconnect();
       }
@@ -175,14 +173,12 @@ export class WebSocketService {
     }
 
     this.reconnectAttempts++;
-    console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS}) in ${this.RECONNECT_DELAY}ms`);
     
     setTimeout(() => {
       this.initializeConnection();
     }, this.RECONNECT_DELAY);
   }
 
-  // Métodos públicos
   connect(): void {
     if (this.ws?.readyState === WebSocket.OPEN) {
       return;
@@ -207,7 +203,6 @@ export class WebSocketService {
     }
   }
 
-  // Métodos específicos para el dashboard
   subscribeToVehicle(vehicleId: string): void {
     this.sendMessage({
       type: 'subscribe',
@@ -242,7 +237,6 @@ export class WebSocketService {
     });
   }
 
-  // Métodos para obtener observables específicos
   getLocationUpdates(): Observable<RealTimeUpdate> {
     return this.realTimeUpdates$.pipe(
       filter(update => !!update.location)
@@ -267,12 +261,10 @@ export class WebSocketService {
     );
   }
 
-  // Método para verificar estado de conexión
   isConnected(): boolean {
     return this.ws?.readyState === WebSocket.OPEN;
   }
 
-  // Método para limpiar recursos
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();

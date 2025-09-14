@@ -72,42 +72,29 @@ export class UserService {
     private authService: AuthService
   ) {}
 
-  // Obtener todos los usuarios
   getUsers(): Observable<User[]> {
-    console.log('🌐 Making API call to:', `${this.API_BASE_URL}/Users`);
-    console.log('🔑 Auth headers:', this.authService.getAuthHeaders());
     
     return this.http.get<any>(`${this.API_BASE_URL}/Users`, {
       headers: this.authService.getAuthHeaders()
     }).pipe(
       map(response => {
-        console.log('📥 Raw API response:', response);
         
         let usersArray: any[] = [];
         
-        // Si la respuesta es directamente un array
         if (response && Array.isArray(response)) {
-          console.log('✅ Direct array response:', response);
           usersArray = response;
         }
-        // Si la respuesta tiene la estructura { success: true, data: [...] }
         else if (response && response.success && response.data && Array.isArray(response.data)) {
-          console.log('✅ Success response with data array:', response.data);
           usersArray = response.data;
         }
-        // Si la respuesta tiene solo la propiedad data
         else if (response && response.data && Array.isArray(response.data)) {
-          console.log('✅ Data array response:', response.data);
           usersArray = response.data;
         }
         else {
-          console.log('⚠️ No valid data found, returning empty array');
           return [];
         }
         
-        // Mapear los datos del API al formato esperado por el frontend
         const mappedUsers = usersArray.map(apiUser => this.mapApiUserToUser(apiUser));
-        console.log('🔄 Mapped users:', mappedUsers);
         return mappedUsers;
       }),
       catchError(error => {
@@ -117,7 +104,6 @@ export class UserService {
     );
   }
 
-  // Mapear datos del API al formato del frontend
   private mapApiUserToUser(apiUser: any): User {
     return {
       id: apiUser.Id,
@@ -136,49 +122,42 @@ export class UserService {
     };
   }
 
-  // Obtener usuario por ID
   getUserById(id: string): Observable<User> {
     return this.http.get<User>(`${this.API_BASE_URL}/Users/${id}`, {
       headers: this.authService.getAuthHeaders()
     });
   }
 
-  // Crear nuevo usuario
   createUser(user: CreateUserRequest): Observable<User> {
     return this.http.post<User>(`${this.API_BASE_URL}/Users`, user, {
       headers: this.authService.getAuthHeaders()
     });
   }
 
-  // Actualizar usuario
   updateUser(id: string, user: UpdateUserRequest): Observable<User> {
     return this.http.put<User>(`${this.API_BASE_URL}/Users/${id}`, user, {
       headers: this.authService.getAuthHeaders()
     });
   }
 
-  // Eliminar usuario
   deleteUser(id: string): Observable<any> {
     return this.http.delete(`${this.API_BASE_URL}/Users/${id}`, {
       headers: this.authService.getAuthHeaders()
     });
   }
 
-  // Cambiar contraseña
   changePassword(id: string, passwordData: ChangePasswordRequest): Observable<any> {
     return this.http.put(`${this.API_BASE_URL}/Users/${id}/change-password`, passwordData, {
       headers: this.authService.getAuthHeaders()
     });
   }
 
-  // Obtener permisos de pantalla del usuario
   getUserScreenPermissions(userId: string): Observable<UserScreenPermissions[]> {
     return this.http.get<UserScreenPermissions[]>(`${this.API_BASE_URL}/Users/${userId}/screen-permissions`, {
       headers: this.authService.getAuthHeaders()
     });
   }
 
-  // Obtener opciones de perfiles
   getProfileOptions() {
     return [
       { label: 'Admin', value: 1, description: 'Acceso completo al sistema' },
@@ -186,7 +165,6 @@ export class UserService {
     ];
   }
 
-  // Obtener opciones de tipos de identificación
   getIdentificationTypeOptions() {
     return [
       { label: 'Cédula de Ciudadanía', value: 'CC' },
@@ -197,7 +175,6 @@ export class UserService {
     ];
   }
 
-  // Validar email único
   validateEmailUnique(email: string, excludeUserId?: string): Observable<{ isUnique: boolean }> {
     const params: any = { email };
     if (excludeUserId) {
@@ -210,7 +187,6 @@ export class UserService {
     });
   }
 
-  // Validar identificación única
   validateIdentificationUnique(identificacion: string, excludeUserId?: string): Observable<{ isUnique: boolean }> {
     const params: any = { identificacion };
     if (excludeUserId) {
