@@ -19,10 +19,26 @@
 
   @if (isSimulating()) {
   <p-card class="mb-4">
-    <div class="flex align-items-center gap-3">
-      <i class="pi pi-spin pi-spinner text-blue-500"></i>
-      <span class="text-blue-600 font-medium">Simulación activa - Generando datos cada 5 segundos</span>
-      <p-tag value="ACTIVO" severity="success"></p-tag>
+    <div class="grid">
+      <div class="col-12 md:col-8">
+        <div class="flex align-items-center gap-3 mb-3">
+          <i class="pi pi-spin pi-spinner text-blue-500"></i>
+          <span class="text-blue-600 font-medium">Simulación Realista Activa</span>
+          <p-tag value="ACTIVO" severity="success"></p-tag>
+        </div>
+        <div class="text-sm text-gray-600">
+          <p><strong>🔄 Frecuencia:</strong> Actualizaciones cada 3 segundos</p>
+          <p><strong>🚗 Vehículos:</strong> {{ vehicles().length }} vehículos en movimiento</p>
+          <p><strong>📍 Área:</strong> Bogotá y alrededores (radio 2km)</p>
+          <p><strong>🎯 Comportamiento:</strong> Movimiento realista con cambios de dirección</p>
+        </div>
+      </div>
+      <div class="col-12 md:col-4">
+        <div class="text-center">
+          <div class="text-2xl font-bold text-blue-600">{{ vehicles().length }}</div>
+          <div class="text-sm text-gray-500">Vehículos Activos</div>
+        </div>
+      </div>
     </div>
   </p-card>
   }

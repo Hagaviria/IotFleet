@@ -17,6 +17,7 @@ import { FormFieldBase } from '../../../../Shared/Models/forms/form-field-base';
 
 import { VehicleService, Vehicle } from '../../Services/vehicle.service';
 import { AuthService } from '../../../../Security/Services/auth.service';
+import { SimulationService } from '../../Services/simulation.service';
 
 export interface SensorDataRequest {
   vehicleId: string;
@@ -52,7 +53,8 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
     private vehicleService: VehicleService,
     private authService: AuthService,
     private messageService: MessageService,
-    private http: HttpClient
+    private http: HttpClient,
+    private simulationService: SimulationService
   ) {}
 
   ngOnInit(): void {
@@ -165,46 +167,23 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'info',
       summary: 'Simulación Iniciada',
-      detail: 'Generando datos de sensores cada 5 segundos'
+      detail: 'Generando datos de sensores realistas cada 2 segundos'
     });
 
-    const interval = setInterval(() => {
-      if (!this.isSimulating()) {
-        clearInterval(interval);
-        return;
-      }
-
-      const randomVehicle = this.vehicles()[Math.floor(Math.random() * this.vehicles().length)];
-      const simulatedData: SensorDataRequest = {
-        vehicleId: randomVehicle.id,
-        latitude: 4.6097100 + (Math.random() - 0.5) * 0.01,
-        longitude: -74.0817500 + (Math.random() - 0.5) * 0.01,
-        altitude: 2600 + (Math.random() - 0.5) * 100,
-        speed: Math.random() * 80 + 20,
-        fuelLevel: Math.random() * 100,
-        fuelConsumption: 8.5 + (Math.random() - 0.5) * 2,
-        engineTemperature: 85 + (Math.random() - 0.5) * 20,
-        ambientTemperature: 22 + (Math.random() - 0.5) * 10
-      };
-
-      this.sendSensorDataToBackend(simulatedData).subscribe({
-        next: () => {
-        },
-        error: (error) => {
-          console.error('Error enviando datos simulados:', error);
-        }
-      });
-    }, 5000);
+    // Usar el servicio de simulación
+    this.simulationService.startSimulation(this.vehicles());
   }
 
   stopSimulation(): void {
     this.isSimulating.set(false);
+    this.simulationService.stopSimulation();
     this.messageService.add({
       severity: 'info',
       summary: 'Simulación Detenida',
-      detail: 'Se ha detenido la generación automática de datos'
+      detail: 'Generación de datos de sensores detenida'
     });
   }
+
 
   cancelCreate(): void {
     this.showCreateDialog.set(false);

@@ -34,6 +34,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   webSocketStatus = signal<
     'connecting' | 'connected' | 'disconnected' | 'error'
   >('disconnected');
+  
 
   activeVehiclesCount = computed(
     () => (this.vehicles() || []).filter((v) => v.status === 'active').length
@@ -162,6 +163,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
+          console.error('❌ WebSocket Location Update Error:', error);
         },
       });
 
@@ -333,21 +335,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+
   private updateVehicleLocation(vehicleId: string, location: any): void {
     const currentLocations = this.locations();
-    const updatedLocations = currentLocations.map((loc) =>
-      loc.vehicleId === vehicleId
-        ? { ...loc, ...location, timestamp: new Date() }
-        : loc
-    );
-    this.locations.set(updatedLocations);
-
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Ubicación Actualizada',
-      detail: `Vehículo ${vehicleId} actualizado en tiempo real`,
-      life: 3000,
-    });
+    const existingLocationIndex = currentLocations.findIndex(loc => loc.vehicleId === vehicleId);
+    
+    if (existingLocationIndex >= 0) {
+      // Actualizar ubicación existente
+      const updatedLocations = [...currentLocations];
+      updatedLocations[existingLocationIndex] = { 
+        ...updatedLocations[existingLocationIndex], 
+        ...location, 
+        timestamp: new Date() 
+      };
+      this.locations.set(updatedLocations);
+    } else {
+      // Agregar nueva ubicación
+      const newLocation = {
+        id: `${vehicleId}-${Date.now()}`,
+        vehicleId,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        timestamp: new Date(),
+        speed: location.speed || 0,
+        fuelLevel: location.fuelLevel || 0,
+        isOnline: true,
+        altitude: location.altitude || 0,
+        fuelConsumption: location.fuelConsumption || 0,
+        engineTemperature: location.engineTemperature || 0,
+        ambientTemperature: location.ambientTemperature || 0
+      };
+      this.locations.set([...currentLocations, newLocation]);
+    }
   }
 
   private updateVehicleSensorData(vehicleId: string, sensorData: any): void {

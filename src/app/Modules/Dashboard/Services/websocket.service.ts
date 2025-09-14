@@ -166,6 +166,37 @@ export class WebSocketService {
     }
   }
 
+  // Método para manejar eventos directos del backend
+  public setupBackendEventHandlers(): void {
+    if (this.ws) {
+      // Escuchar eventos de actualización de ubicación del backend
+      this.ws.addEventListener('message', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'LocationUpdate') {
+            this.realTimeUpdateSubject.next({
+              vehicleId: data.vehicleId,
+              location: data.location
+            });
+          } else if (data.type === 'SensorDataUpdate') {
+            this.realTimeUpdateSubject.next({
+              vehicleId: data.vehicleId,
+              sensorData: data.sensorData
+            });
+          } else if (data.type === 'AlertUpdate') {
+            this.realTimeUpdateSubject.next({
+              vehicleId: data.vehicleId,
+              alert: data.alert
+            });
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      });
+    }
+  }
+
   private scheduleReconnect(): void {
     if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
       console.error('Max reconnection attempts reached');
@@ -263,6 +294,14 @@ export class WebSocketService {
 
   isConnected(): boolean {
     return this.ws?.readyState === WebSocket.OPEN;
+  }
+
+  // Método para enviar actualizaciones de ubicación directamente (para simulación)
+  sendLocationUpdate(vehicleId: string, location: any): void {
+    this.realTimeUpdateSubject.next({
+      vehicleId: vehicleId,
+      location: location
+    });
   }
 
   ngOnDestroy(): void {

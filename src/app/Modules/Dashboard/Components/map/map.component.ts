@@ -201,12 +201,27 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    this.clearMarkers();
-
+    // Actualizar marcadores existentes o crear nuevos
     vehicles.forEach((vehicle) => {
       const location = locations.find((loc) => loc.vehicleId === vehicle.id);
       if (location) {
-        this.addVehicleMarker(vehicle, location);
+        const existingMarker = this.markers.get(vehicle.id);
+        if (existingMarker) {
+          // Actualizar marcador existente con animación suave
+          this.updateVehicleMarker(vehicle, location, existingMarker);
+        } else {
+          // Crear nuevo marcador
+          this.addVehicleMarker(vehicle, location);
+        }
+      }
+    });
+
+    // Remover marcadores de vehículos que ya no existen
+    const currentVehicleIds = new Set(vehicles.map(v => v.id));
+    this.markers.forEach((marker, vehicleId) => {
+      if (!currentVehicleIds.has(vehicleId)) {
+        marker.remove();
+        this.markers.delete(vehicleId);
       }
     });
   }
@@ -229,10 +244,82 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
         )
         .addTo(this.mapInstance);
 
+      // Agregar clase de animación para nuevo marcador
+      const element = marker.getElement();
+      if (element) {
+        element.classList.add('new-marker');
+        setTimeout(() => {
+          element.classList.remove('new-marker');
+        }, 500);
+      }
+
       this.markers.set(vehicle.id, marker);
     } catch (error) {
       console.error(`Error adding marker for vehicle ${vehicle.id}:`, error);
     }
+  }
+
+  private updateVehicleMarker(vehicle: Vehicle, location: Location, existingMarker: any): void {
+    if (!this.mapInstance || !existingMarker) {
+      return;
+    }
+
+    try {
+      const currentLngLat = existingMarker.getLngLat();
+      const newLngLat = [location.longitude, location.latitude];
+      
+      // Verificar si la posición ha cambiado significativamente
+      const distance = this.calculateDistance(
+        currentLngLat.lat, currentLngLat.lng,
+        location.latitude, location.longitude
+      );
+
+      if (distance > 0.001) { // Solo actualizar si se movió más de ~100 metros
+        // Agregar clase de animación para movimiento
+        const element = existingMarker.getElement();
+        if (element) {
+          element.classList.add('moving');
+        }
+
+        // Actualizar posición con animación suave
+        existingMarker.setLngLat(newLngLat);
+        
+        // Actualizar popup con nueva información
+        existingMarker.setPopup(
+          new window.maplibregl.Popup({ offset: 25 }).setHTML(
+            this.createVehiclePopup(vehicle, location)
+          )
+        );
+
+        // Actualizar color si el estado cambió
+        const newColor = this.getVehicleColor(vehicle.status);
+        if (element) {
+          element.style.backgroundColor = newColor;
+          
+          // Remover clase de animación después de completar
+          setTimeout(() => {
+            element.classList.remove('moving');
+          }, 600);
+        }
+      }
+    } catch (error) {
+      console.error(`Error updating marker for vehicle ${vehicle.id}:`, error);
+    }
+  }
+
+  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371e3; // Radio de la Tierra en metros
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c; // Distancia en metros
   }
 
   private clearMarkers(): void {

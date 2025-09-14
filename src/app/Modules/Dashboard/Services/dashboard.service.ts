@@ -116,13 +116,16 @@ export class DashboardService {
     }).pipe(
       map(response => {
         if (response && response.success && response.data) {
-          const locations = this.mapSensorDataToLocations(response.data);
+          const allLocations = this.mapSensorDataToLocations(response.data);
           
-          if (locations.length > 0) {
-            this.createVehiclesFromLocations(locations);
+          // Filtrar para obtener solo la ubicación más reciente por vehículo
+          const latestLocations = this.getLatestLocationsPerVehicle(allLocations);
+          
+          if (latestLocations.length > 0) {
+            this.createVehiclesFromLocations(latestLocations);
           }
           
-          return locations;
+          return latestLocations;
         }
         return [];
       }),
@@ -200,6 +203,20 @@ export class DashboardService {
           lastMaintenance: new Date(data.Vehicle.LastMaintenance)
         } : undefined
       }));
+  }
+
+  private getLatestLocationsPerVehicle(locations: Location[]): Location[] {
+    const locationMap = new Map<string, Location>();
+    
+    locations.forEach(location => {
+      const existingLocation = locationMap.get(location.vehicleId);
+      
+      if (!existingLocation || location.timestamp > existingLocation.timestamp) {
+        locationMap.set(location.vehicleId, location);
+      }
+    });
+    
+    return Array.from(locationMap.values());
   }
 
   private createVehiclesFromLocations(locations: Location[]): void {

@@ -23,6 +23,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PasswordModule } from 'primeng/password';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 import { DashboardComponent } from './Components/dashboard/dashboard.component';
@@ -42,6 +43,7 @@ import { DashboardService } from './Services/dashboard.service';
 import { MapService } from './Services/map.service';
 import { AlertsService } from './Services/alerts.service';
 import { OfflineService } from './Services/offline.service';
+import { SimulationService } from './Services/simulation.service';
 
 @NgModule({
   declarations: [
@@ -79,6 +81,7 @@ import { OfflineService } from './Services/offline.service';
     InputNumberModule,
     CheckboxModule,
     PasswordModule,
+    SelectButtonModule,
     GenericFormComponent,
     FormFieldComponent,
     GenericTableComponent
@@ -88,6 +91,7 @@ import { OfflineService } from './Services/offline.service';
     MapService,
     AlertsService,
     OfflineService,
+    SimulationService,
     MessageService,
     ConfirmationService
   ]

@@ -25,11 +25,45 @@
 
 .maplibregl-marker {
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .maplibregl-marker:hover {
   transform: scale(1.1);
+}
+
+/* Animación suave para movimiento de marcadores */
+.maplibregl-marker.moving {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: pulse 0.6s ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Animación para nuevos marcadores */
+.maplibregl-marker.new-marker {
+  animation: fadeInScale 0.5s ease-out;
+}
+
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .vehicle-marker {
