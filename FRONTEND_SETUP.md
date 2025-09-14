@@ -157,12 +157,10 @@ npm test -- --testNamePattern="LoginComponent"
 1. **Probar el frontend** en: http://localhost:4200
 2. **Revisar los tests** para entender la funcionalidad
 3. **Leer FRONTEND_DESIGN.md** para entender la arquitectura
-4. **Contribuir al proyecto** siguiendo las mejores prácticas
 
-### Credenciales de Prueba
-
-- **Usuario Admin**: `admin` / `12345`
-- **Usuario Regular**: `user` / `12345`
+## Credenciales de Prueba
+Usuario Admin: "Correo": "admin@iotfleet.com", "Contraseña": "Admin123!",
+Usuario Regular: carlos.rodriguez@empresa.com/ Operador123!
 
 ---
 
