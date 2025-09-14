@@ -169,7 +169,6 @@
   display: block;
 }
 
-/* Responsive */
 @media (min-width: 768px) {
   .md\\:col-6 {
     flex: 0 0 50%;
@@ -177,7 +176,6 @@
   }
 }
 
-/* Grid system */
 .grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -194,7 +192,6 @@
   }
 }
 
-/* PrimeNG overrides */
 .p-datatable .p-datatable-tbody > tr:hover {
   background-color: #f8fafc;
 }
@@ -210,7 +207,8 @@
 
 .p-dialog {
   border-radius: 0.5rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .p-card {
@@ -218,38 +216,33 @@
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
-/* Loading states */
 .p-datatable .p-datatable-loading-overlay {
   background-color: rgba(255, 255, 255, 0.8);
 }
 
-/* Empty state */
 .p-datatable .p-datatable-tbody > tr > td[colspan] {
   text-align: center;
   padding: 2rem;
 }
 
-/* Form validation */
 .field small {
   display: block;
   margin-top: 0.25rem;
   font-size: 0.75rem;
 }
 
-/* Button states */
 .p-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Table responsive */
 @media (max-width: 768px) {
   .p-datatable .p-datatable-thead > tr > th,
   .p-datatable .p-datatable-tbody > tr > td {
     padding: 0.5rem;
     font-size: 0.875rem;
   }
-  
+
   .p-dialog {
     width: 95% !important;
     margin: 1rem;

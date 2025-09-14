@@ -1,218 +1,268 @@
 <div class="dashboard-container">
-    <div class="surface-0 shadow-2 border-bottom-1 border-300">
-        <div class="container mx-auto px-3">
-            <div class="flex justify-content-between align-items-center py-3">
-                <div class="flex align-items-center gap-3">
-                    <h1 class="text-2xl font-bold text-900 m-0">Dashboard de Flota</h1>
-                    <app-offline-indicator [isOnline]="isOnline"></app-offline-indicator>
+  <div class="surface-0 shadow-2 border-bottom-1 border-300">
+    <div class="container mx-auto px-3">
+      <div class="flex justify-content-between align-items-center py-3">
+        <div class="flex align-items-center gap-3">
+          <h1 class="text-2xl font-bold text-900 m-0">Dashboard de Flota</h1>
+          <app-offline-indicator [isOnline]="isOnline"></app-offline-indicator>
 
-                    <div class="flex align-items-center gap-2 px-2 py-1 border-round" [class]="
+          <div
+            class="flex align-items-center gap-2 px-2 py-1 border-round"
+            [class]="
               webSocketStatus() === 'connected'
                 ? 'bg-green-100 text-green-800'
                 : webSocketStatus() === 'connecting'
                 ? 'bg-yellow-100 text-yellow-800'
                 : 'bg-red-100 text-red-800'
-            ">
-                        <i class="pi" [class.pi-wifi]="webSocketStatus() === 'connected'"
-                            [class.pi-spin]="webSocketStatus() === 'connecting'" [class.pi-wifi-slash]="
+            "
+          >
+            <i
+              class="pi"
+              [class.pi-wifi]="webSocketStatus() === 'connected'"
+              [class.pi-spin]="webSocketStatus() === 'connecting'"
+              [class.pi-wifi-slash]="
                 webSocketStatus() === 'disconnected' ||
                 webSocketStatus() === 'error'
-              ">
-                        </i>
-                        <span class="text-sm font-medium">
-                            @switch (webSocketStatus()) { @case ('connected') { Tiempo Real }
-                            @case ('connecting') { Conectando... } @case ('disconnected') {
-                            Desconectado } @case ('error') { Error } }
-                        </span>
-                    </div>
+              "
+            >
+            </i>
+            <span class="text-sm font-medium">
+              @switch (webSocketStatus()) { @case ('connected') { Tiempo Real }
+              @case ('connecting') { Conectando... } @case ('disconnected') {
+              Desconectado } @case ('error') { Error } }
+            </span>
+          </div>
 
-                    <!-- Estado de la simulación -->
-                    <div class="flex align-items-center gap-2 px-2 py-1 border-round" [class]="
+          <!-- Estado de la simulación -->
+          <div
+            class="flex align-items-center gap-2 px-2 py-1 border-round"
+            [class]="
               simulationStatus().isRunning
                 ? 'bg-blue-100 text-blue-800'
                 : 'bg-gray-100 text-gray-800'
-            ">
-                        <i class="pi" [class.pi-play]="simulationStatus().isRunning"
-                            [class.pi-pause]="!simulationStatus().isRunning"></i>
-                        <span class="text-sm font-medium">
-                            @if (simulationStatus().isRunning) {
-                            Simulación Activa ({{ simulationStatus().vehicleCount }} vehículos)
-                            } @else {
-                            Simulación Detenida
-                            }
-                        </span>
-                    </div>
-                </div>
-                <div class="flex align-items-center gap-3">
-                    <!-- Información del usuario -->
-                    <div class="flex align-items-center gap-2 px-3 py-2 border-round bg-blue-50">
-                        <i class="pi pi-user text-blue-600"></i>
-                        <div class="flex flex-column">
-                            <span class="text-sm font-medium text-blue-800">{{ currentUser().role }}</span>
-                            <span class="text-xs text-blue-600">Usuario ID: {{ currentUser().id }}</span>
-                        </div>
-                    </div>
-
-                    <p-button icon="pi pi-refresh" [loading]="isLoading()" (onClick)="refreshData()"
-                        severity="secondary" [text]="true" pTooltip="Actualizar datos">
-                    </p-button>
-
-                    <p-button icon="pi pi-sign-out" label="Cerrar Sesión" (onClick)="logout()" severity="danger"
-                        [outlined]="true" pTooltip="Cerrar sesión">
-                    </p-button>
-
-                    <!-- Controles de simulación (solo para administradores) -->
-                    @if (isAdmin()) {
-                    <div class="flex align-items-center gap-2">
-                        @if (simulationStatus().isRunning) {
-                        <p-button icon="pi pi-pause" severity="warn" (onClick)="stopSimulation()" [outlined]="true"
-                            pTooltip="Detener simulación" label="Detener">
-                        </p-button>
-                        } @else {
-                        <p-button icon="pi pi-play" severity="success" (onClick)="startSimulation()" [outlined]="true"
-                            pTooltip="Iniciar simulación" label="Iniciar">
-                        </p-button>
-                        }
-                    </div>
-                    }
-                </div>
-            </div>
+            "
+          >
+            <i
+              class="pi"
+              [class.pi-play]="simulationStatus().isRunning"
+              [class.pi-pause]="!simulationStatus().isRunning"
+            ></i>
+            <span class="text-sm font-medium">
+              @if (simulationStatus().isRunning) { Simulación Activa ({{
+                simulationStatus().vehicleCount
+              }}
+              vehículos) } @else { Simulación Detenida }
+            </span>
+          </div>
         </div>
+        <div class="flex align-items-center gap-3">
+          <div
+            class="flex align-items-center gap-2 px-3 py-2 border-round bg-blue-50"
+          >
+            <i class="pi pi-user text-blue-600"></i>
+            <div class="flex flex-column">
+              <span class="text-sm font-medium text-blue-800">{{
+                currentUser().role
+              }}</span>
+              <span class="text-xs text-blue-600"
+                >Usuario ID: {{ currentUser().id }}</span
+              >
+            </div>
+          </div>
+
+          <p-button
+            icon="pi pi-refresh"
+            [loading]="isLoading()"
+            (onClick)="refreshData()"
+            severity="secondary"
+            [text]="true"
+            pTooltip="Actualizar datos"
+          >
+          </p-button>
+
+          <p-button
+            icon="pi pi-sign-out"
+            label="Cerrar Sesión"
+            (onClick)="logout()"
+            severity="danger"
+            [outlined]="true"
+            pTooltip="Cerrar sesión"
+          >
+          </p-button>
+
+          @if (isAdmin()) {
+          <div class="flex align-items-center gap-2">
+            @if (simulationStatus().isRunning) {
+            <p-button
+              icon="pi pi-pause"
+              severity="warn"
+              (onClick)="stopSimulation()"
+              [outlined]="true"
+              pTooltip="Detener simulación"
+              label="Detener"
+            >
+            </p-button>
+            } @else {
+            <p-button
+              icon="pi pi-play"
+              severity="success"
+              (onClick)="startSimulation()"
+              [outlined]="true"
+              pTooltip="Iniciar simulación"
+              label="Iniciar"
+            >
+            </p-button>
+            }
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mx-auto px-3 py-4">
+    <div class="grid">
+      <div class="col-12 md:col-6 lg:col-3">
+        <p-card class="h-full">
+          <div class="flex align-items-center justify-content-between">
+            <div>
+              <p class="text-sm font-medium text-600 m-0">Total Vehículos</p>
+              <p class="text-3xl font-bold text-900 m-0">
+                {{ stats()?.totalVehicles || 0 }}
+              </p>
+              <p class="text-sm text-green-600 mt-1 m-0">
+                <i class="pi pi-arrow-up text-xs"></i>
+                {{ activeVehiclesCount() }} activos
+              </p>
+            </div>
+            <div class="p-3 bg-blue-100 border-round">
+              <i class="pi pi-car text-2xl text-blue-600"></i>
+            </div>
+          </div>
+        </p-card>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-3">
+        <p-card class="h-full">
+          <div class="flex align-items-center justify-content-between">
+            <div>
+              <p class="text-sm font-medium text-600 m-0">Distancia Total</p>
+              <p class="text-3xl font-bold text-900 m-0">
+                {{ stats()?.totalDistance || 0 | number : "1.0-0" }} km
+              </p>
+              <p class="text-sm text-500 mt-1 m-0">Este mes</p>
+            </div>
+            <div class="p-3 bg-green-100 border-round">
+              <i class="pi pi-map text-2xl text-green-600"></i>
+            </div>
+          </div>
+        </p-card>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-3">
+        <p-card class="h-full">
+          <div class="flex align-items-center justify-content-between">
+            <div>
+              <p class="text-sm font-medium text-600 m-0">Velocidad Promedio</p>
+              <p class="text-3xl font-bold text-900 m-0">
+                {{ averageSpeed() | number : "1.0-0" }} km/h
+              </p>
+              <p class="text-sm text-500 mt-1 m-0">Flota activa</p>
+            </div>
+            <div class="p-3 bg-yellow-100 border-round">
+              <i class="pi pi-tachometer text-2xl text-yellow-600"></i>
+            </div>
+          </div>
+        </p-card>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-3">
+        <p-card class="h-full">
+          <div class="flex align-items-center justify-content-between">
+            <div>
+              <p class="text-sm font-medium text-600 m-0">Alertas Críticas</p>
+              <p class="text-3xl font-bold text-900 m-0">
+                {{ criticalAlertsCount() }}
+              </p>
+              <p class="text-sm text-red-600 mt-1 m-0">
+                <i class="pi pi-exclamation-triangle text-xs"></i>
+                Requieren atención
+              </p>
+            </div>
+            <div class="p-3 bg-red-100 border-round">
+              <i class="pi pi-exclamation-triangle text-2xl text-red-600"></i>
+            </div>
+          </div>
+        </p-card>
+      </div>
     </div>
 
-    <div class="container mx-auto px-3 py-4">
-        <div class="grid">
-            <div class="col-12 md:col-6 lg:col-3">
-                <p-card class="h-full">
-                    <div class="flex align-items-center justify-content-between">
-                        <div>
-                            <p class="text-sm font-medium text-600 m-0">Total Vehículos</p>
-                            <p class="text-3xl font-bold text-900 m-0">
-                                {{ stats()?.totalVehicles || 0 }}
-                            </p>
-                            <p class="text-sm text-green-600 mt-1 m-0">
-                                <i class="pi pi-arrow-up text-xs"></i>
-                                {{ activeVehiclesCount() }} activos
-                            </p>
-                        </div>
-                        <div class="p-3 bg-blue-100 border-round">
-                            <i class="pi pi-car text-2xl text-blue-600"></i>
-                        </div>
-                    </div>
-                </p-card>
-            </div>
+    <div class="mt-4">
+      <p-tabView>
+        <p-tabPanel header="Mapa en Vivo" leftIcon="pi pi-map">
+          <div class="surface-0 border-round shadow-1">
+            <app-map
+              [vehicles]="vehicles"
+              [locations]="locations"
+              [isOnline]="isOnline"
+            >
+            </app-map>
+          </div>
+        </p-tabPanel>
 
-            <div class="col-12 md:col-6 lg:col-3">
-                <p-card class="h-full">
-                    <div class="flex align-items-center justify-content-between">
-                        <div>
-                            <p class="text-sm font-medium text-600 m-0">Distancia Total</p>
-                            <p class="text-3xl font-bold text-900 m-0">
-                                {{ stats()?.totalDistance || 0 | number : "1.0-0" }} km
-                            </p>
-                            <p class="text-sm text-500 mt-1 m-0">Este mes</p>
-                        </div>
-                        <div class="p-3 bg-green-100 border-round">
-                            <i class="pi pi-map text-2xl text-green-600"></i>
-                        </div>
-                    </div>
-                </p-card>
-            </div>
+        <p-tabPanel header="Gráficos Históricos" leftIcon="pi pi-chart-line">
+          <div class="surface-0 border-round shadow-1">
+            <app-historical-charts [vehicles]="vehicles" [isOnline]="isOnline">
+            </app-historical-charts>
+          </div>
+        </p-tabPanel>
 
-            <div class="col-12 md:col-6 lg:col-3">
-                <p-card class="h-full">
-                    <div class="flex align-items-center justify-content-between">
-                        <div>
-                            <p class="text-sm font-medium text-600 m-0">Velocidad Promedio</p>
-                            <p class="text-3xl font-bold text-900 m-0">
-                                {{ averageSpeed() | number : "1.0-0" }} km/h
-                            </p>
-                            <p class="text-sm text-500 mt-1 m-0">Flota activa</p>
-                        </div>
-                        <div class="p-3 bg-yellow-100 border-round">
-                            <i class="pi pi-tachometer text-2xl text-yellow-600"></i>
-                        </div>
-                    </div>
-                </p-card>
-            </div>
+        <p-tabPanel header="Alertas" leftIcon="pi pi-bell">
+          <div class="surface-0 border-round shadow-1">
+            <app-alerts
+              [alerts]="alerts"
+              [vehicles]="vehicles"
+              [isOnline]="isOnline"
+              [isAdmin]="isAdmin"
+              (alertAction)="onAlertAction($event.alertId, $event.action)"
+            >
+            </app-alerts>
+          </div>
+        </p-tabPanel>
 
-            <div class="col-12 md:col-6 lg:col-3">
-                <p-card class="h-full">
-                    <div class="flex align-items-center justify-content-between">
-                        <div>
-                            <p class="text-sm font-medium text-600 m-0">Alertas Críticas</p>
-                            <p class="text-3xl font-bold text-900 m-0">
-                                {{ criticalAlertsCount() }}
-                            </p>
-                            <p class="text-sm text-red-600 mt-1 m-0">
-                                <i class="pi pi-exclamation-triangle text-xs"></i>
-                                Requieren atención
-                            </p>
-                        </div>
-                        <div class="p-3 bg-red-100 border-round">
-                            <i class="pi pi-exclamation-triangle text-2xl text-red-600"></i>
-                        </div>
-                    </div>
-                </p-card>
-            </div>
-        </div>
+        @if (isAdmin()) {
+        <p-tabPanel header="Gestión de Vehículos" leftIcon="pi pi-car">
+          <div class="surface-0 border-round shadow-1">
+            <app-vehicle-management></app-vehicle-management>
+          </div>
+        </p-tabPanel>
 
-        <div class="mt-4">
-            <p-tabView>
-                <p-tabPanel header="Mapa en Vivo" leftIcon="pi pi-map">
-                    <div class="surface-0 border-round shadow-1">
+        <p-tabPanel header="Datos de Sensores" leftIcon="pi pi-send">
+          <div class="surface-0 border-round shadow-1">
+            <app-sensor-data-management></app-sensor-data-management>
+          </div>
+        </p-tabPanel>
 
-                        <app-map [vehicles]="vehicles" [locations]="locations" [isOnline]="isOnline">
-                        </app-map>
-                    </div>
-                </p-tabPanel>
-
-                <p-tabPanel header="Gráficos Históricos" leftIcon="pi pi-chart-line">
-                    <div class="surface-0 border-round shadow-1">
-                        <app-historical-charts [vehicles]="vehicles" [isOnline]="isOnline">
-                        </app-historical-charts>
-                    </div>
-                </p-tabPanel>
-
-                <p-tabPanel header="Alertas" leftIcon="pi pi-bell">
-                    <div class="surface-0 border-round shadow-1">
-                        <app-alerts [alerts]="alerts" [vehicles]="vehicles" [isOnline]="isOnline" [isAdmin]="isAdmin"
-                            (alertAction)="onAlertAction($event.alertId, $event.action)">
-                        </app-alerts>
-                    </div>
-                </p-tabPanel>
-
-                @if (isAdmin()) {
-                <p-tabPanel header="Gestión de Vehículos" leftIcon="pi pi-car">
-                    <div class="surface-0 border-round shadow-1">
-                        <app-vehicle-management></app-vehicle-management>
-                    </div>
-                </p-tabPanel>
-
-                <p-tabPanel header="Datos de Sensores" leftIcon="pi pi-send">
-                    <div class="surface-0 border-round shadow-1">
-                        <app-sensor-data-management></app-sensor-data-management>
-                    </div>
-                </p-tabPanel>
-
-                <p-tabPanel header="Gestión de Usuarios" leftIcon="pi pi-users">
-                    <div class="surface-0 border-round shadow-1">
-                        <app-user-management></app-user-management>
-                    </div>
-                </p-tabPanel>
-                }
-            </p-tabView>
-        </div>
+        <p-tabPanel header="Gestión de Usuarios" leftIcon="pi pi-users">
+          <div class="surface-0 border-round shadow-1">
+            <app-user-management></app-user-management>
+          </div>
+        </p-tabPanel>
+        }
+      </p-tabView>
     </div>
+  </div>
 
-    @if (isLoading()) {
-    <div class="fixed top-0 left-0 w-full h-full bg-black-alpha-50 flex align-items-center justify-content-center z-5">
-        <div class="surface-0 border-round p-4 flex align-items-center gap-3">
-            <p-progressBar mode="indeterminate" styleClass="w-16rem"></p-progressBar>
-            <span class="text-600">Cargando datos...</span>
-        </div>
+  @if (isLoading()) {
+  <div
+    class="fixed top-0 left-0 w-full h-full bg-black-alpha-50 flex align-items-center justify-content-center z-5"
+  >
+    <div class="surface-0 border-round p-4 flex align-items-center gap-3">
+      <p-progressBar mode="indeterminate" styleClass="w-16rem"></p-progressBar>
+      <span class="text-600">Cargando datos...</span>
     </div>
-    }
+  </div>
+  }
 
-    <p-toast></p-toast>
+  <p-toast></p-toast>
 </div>

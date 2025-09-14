@@ -6,15 +6,27 @@
     <h2 class="text-2xl font-bold text-gray-800">Gestión de Vehículos</h2>
 
     @if (isAdmin()) {
-    <p-button label="Crear Vehículo" icon="pi pi-plus" (onClick)="showCreateVehicleDialog()" [loading]="isLoading()">
+    <p-button
+      label="Crear Vehículo"
+      icon="pi pi-plus"
+      (onClick)="showCreateVehicleDialog()"
+      [loading]="isLoading()"
+    >
     </p-button>
     }
   </div>
 
   <p-card>
-    <p-table [value]="filteredVehicles()" [paginator]="true" [rows]="10" [loading]="isLoading()"
-      [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} vehículos"
-      [rowsPerPageOptions]="[5, 10, 25]" styleClass="p-datatable-sm">
+    <p-table
+      [value]="filteredVehicles()"
+      [paginator]="true"
+      [rows]="10"
+      [loading]="isLoading()"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} vehículos"
+      [rowsPerPageOptions]="[5, 10, 25]"
+      styleClass="p-datatable-sm"
+    >
       <ng-template pTemplate="header">
         <tr>
           <th>Placa</th>
@@ -40,7 +52,10 @@
           <td>{{ vehicle.fuelCapacity || 0 }}</td>
           <td>{{ vehicle.fuelEfficiency | number : "1.1-1" }}</td>
           <td>
-            <p-tag [value]="getStatusLabel(vehicle.status)" [severity]="getStatusSeverity(vehicle.status)">
+            <p-tag
+              [value]="getStatusLabel(vehicle.status)"
+              [severity]="getStatusSeverity(vehicle.status)"
+            >
             </p-tag>
           </td>
           <td>
@@ -53,11 +68,21 @@
           @if (isAdmin()) {
           <td>
             <div class="flex gap-2">
-              <p-button icon="pi pi-pencil" [text]="true" severity="info" pTooltip="Editar vehículo"
-                (onClick)="showEditVehicleDialog(vehicle)">
+              <p-button
+                icon="pi pi-pencil"
+                [text]="true"
+                severity="info"
+                pTooltip="Editar vehículo"
+                (onClick)="showEditVehicleDialog(vehicle)"
+              >
               </p-button>
-              <p-button icon="pi pi-trash" [text]="true" severity="danger" pTooltip="Eliminar vehículo"
-                (onClick)="deleteVehicle(vehicle)">
+              <p-button
+                icon="pi pi-trash"
+                [text]="true"
+                severity="danger"
+                pTooltip="Eliminar vehículo"
+                (onClick)="deleteVehicle(vehicle)"
+              >
               </p-button>
             </div>
           </td>
@@ -72,7 +97,11 @@
               <i class="pi pi-car text-4xl text-gray-400"></i>
               <span class="text-gray-500">No hay vehículos registrados</span>
               @if (isAdmin()) {
-              <p-button label="Crear Primer Vehículo" icon="pi pi-plus" (onClick)="showCreateVehicleDialog()">
+              <p-button
+                label="Crear Primer Vehículo"
+                icon="pi pi-plus"
+                (onClick)="showCreateVehicleDialog()"
+              >
               </p-button>
               }
             </div>
@@ -82,25 +111,49 @@
     </p-table>
   </p-card>
 
-  <!-- Dialog para crear vehículo -->
-  <p-dialog header="Crear Nuevo Vehículo" [(visible)]="showCreateDialog" [modal]="true" [style]="{ width: '600px' }"
-    [closable]="true" [draggable]="false" [resizable]="false">
-
-    <app-generic-form [formFields]="createVehicleFields" [loading]="isLoading()"
-      (formSubmit)="onCreateVehicleSubmit($event)" (cancel)="cancelCreate()">
+  <p-dialog
+    header="Crear Nuevo Vehículo"
+    [(visible)]="showCreateDialog"
+    [modal]="true"
+    [style]="{ width: '600px' }"
+    [closable]="true"
+    [draggable]="false"
+    [resizable]="false"
+  >
+    <app-generic-form
+      [formFields]="createVehicleFields"
+      [loading]="isLoading()"
+      (formSubmit)="onCreateVehicleSubmit($event)"
+      (cancel)="cancelCreate()"
+    >
     </app-generic-form>
   </p-dialog>
 
-  <p-dialog header="Editar Vehículo" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '600px' }"
-    [closable]="true" [draggable]="false" [resizable]="false">
-
+  <p-dialog
+    header="Editar Vehículo"
+    [(visible)]="showEditDialog"
+    [modal]="true"
+    [style]="{ width: '600px' }"
+    [closable]="true"
+    [draggable]="false"
+    [resizable]="false"
+  >
     <div class="mb-4">
       <label class="block text-sm font-medium mb-2">Placa</label>
-      <input pInputText [value]="selectedVehicle()?.plate" readonly class="w-full bg-gray-100" />
+      <input
+        pInputText
+        [value]="selectedVehicle()?.plate"
+        readonly
+        class="w-full bg-gray-100"
+      />
     </div>
 
-    <app-generic-form [formFields]="editVehicleFields" [loading]="isLoading()"
-      (formSubmit)="onUpdateVehicleSubmit($event)" (cancel)="cancelEdit()">
+    <app-generic-form
+      [formFields]="editVehicleFields"
+      [loading]="isLoading()"
+      (formSubmit)="onUpdateVehicleSubmit($event)"
+      (cancel)="cancelEdit()"
+    >
     </app-generic-form>
   </p-dialog>
 </div>
