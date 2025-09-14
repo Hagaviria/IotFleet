@@ -15,6 +15,7 @@ import { TooltipModule } from 'primeng/tooltip';
 
 // Shared Components
 import { GenericFormComponent } from '../../../../Shared/Components/generic-form/generic-form.component';
+import { GenericTableComponent, TableConfig } from '../../../../Shared/Components/generic-table/generic-table.component';
 import { FormFieldBase } from '../../../../Shared/Models/forms/form-field-base';
 
 // Services
@@ -42,6 +43,24 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   passwordForm: FormGroup;
   createUserFields: FormFieldBase<string>[] = [];
   editUserFields: FormFieldBase<string>[] = [];
+
+  // Table Configuration
+  tableConfig: TableConfig = {
+    columns: [
+      { key: 'identificacion', label: 'Identificación', type: 'text', width: '150px' },
+      { key: 'nombre_completo', label: 'Nombre Completo', type: 'text' },
+      { key: 'correo', label: 'Correo', type: 'text' },
+      { key: 'nombre_perfil', label: 'Perfil', type: 'tag', width: '120px' },
+      { key: 'estado', label: 'Estado', type: 'tag', width: '100px' },
+      { key: 'creado_en', label: 'Fecha Creación', type: 'date', width: '150px' }
+    ],
+    actions: [
+      { label: 'edit', icon: 'pi pi-pencil', severity: 'info', tooltip: 'Editar usuario' },
+      { label: 'delete', icon: 'pi pi-trash', severity: 'danger', tooltip: 'Eliminar usuario' }
+    ],
+    emptyMessage: 'No hay usuarios registrados',
+    emptyIcon: 'pi pi-users'
+  };
 
   // Options
   profileOptions: any[] = [];
@@ -406,5 +425,18 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   // Obtener fecha actual para el calendario
   getCurrentDate(): Date {
     return new Date();
+  }
+
+  // Manejar acciones de la tabla
+  onTableAction(event: { action: string; item: any }): void {
+    const { action, item } = event;
+    switch (action) {
+      case 'edit':
+        this.showEditUserDialog(item);
+        break;
+      case 'delete':
+        this.onDeleteUser(item);
+        break;
+    }
   }
 }

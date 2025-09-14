@@ -86,27 +86,21 @@
   <p-dialog header="Crear Nuevo Vehículo" [(visible)]="showCreateDialog" [modal]="true" [style]="{ width: '600px' }"
     [closable]="true" [draggable]="false" [resizable]="false">
 
-    <app-generic-form 
-      [formFields]="createVehicleFields" 
-      [loading]="isLoading()"
-      (formSubmit)="onCreateVehicleSubmit($event)" 
-      (cancel)="cancelCreate()">
+    <app-generic-form [formFields]="createVehicleFields" [loading]="isLoading()"
+      (formSubmit)="onCreateVehicleSubmit($event)" (cancel)="cancelCreate()">
     </app-generic-form>
   </p-dialog>
 
   <p-dialog header="Editar Vehículo" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '600px' }"
     [closable]="true" [draggable]="false" [resizable]="false">
-    
+
     <div class="mb-4">
       <label class="block text-sm font-medium mb-2">Placa</label>
       <input pInputText [value]="selectedVehicle()?.plate" readonly class="w-full bg-gray-100" />
     </div>
 
-    <app-generic-form 
-      [formFields]="editVehicleFields" 
-      [loading]="isLoading()"
-      (formSubmit)="onUpdateVehicleSubmit($event)" 
-      (cancel)="cancelEdit()">
+    <app-generic-form [formFields]="editVehicleFields" [loading]="isLoading()"
+      (formSubmit)="onUpdateVehicleSubmit($event)" (cancel)="cancelEdit()">
     </app-generic-form>
   </p-dialog>
 </div>

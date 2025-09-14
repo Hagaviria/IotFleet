@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { Subject, takeUntil, combineLatest } from 'rxjs';
-import { MessageService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import { DashboardService } from '../../Services/dashboard.service';
 import { AlertsService } from '../../Services/alerts.service';
 import { OfflineService } from '../../Services/offline.service';
@@ -19,7 +19,7 @@ import {
   standalone: false,
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -51,12 +51,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
     );
   });
 
+  // Información del usuario actual
+  currentUser = computed(() => {
+    const userId = this.authService.getUserId();
+    const userRole = this.authService.getUserRole();
+    return {
+      id: userId,
+      role: userRole,
+      isAdmin: userRole === 'Admin'
+    };
+  });
+
   constructor(
     private dashboardService: DashboardService,
     private alertsService: AlertsService,
     private offlineService: OfflineService,
     private authService: AuthService,
     private messageService: MessageService,
+    private confirmationService: ConfirmationService,
     private sensorDataService: SensorDataService,
     private webSocketService: WebSocketService
   ) {}
@@ -410,5 +422,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
           });
         },
       });
+  }
+
+  // Método para cerrar sesión
+  logout(): void {
+    this.confirmationService.confirm({
+      message: '¿Está seguro de que desea cerrar sesión?',
+      header: 'Confirmar Cierre de Sesión',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, Cerrar Sesión',
+      rejectLabel: 'Cancelar',
+      accept: () => {
+        this.authService.logout();
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Sesión Cerrada',
+          detail: 'Ha cerrado sesión correctamente'
+        });
+        // Redirigir al login
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 1000);
+      }
+    });
   }
 }

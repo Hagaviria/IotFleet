@@ -27,8 +27,21 @@
                     </div>
                 </div>
                 <div class="flex align-items-center gap-3">
+                    <!-- Información del usuario -->
+                    <div class="flex align-items-center gap-2 px-3 py-2 border-round bg-blue-50">
+                        <i class="pi pi-user text-blue-600"></i>
+                        <div class="flex flex-column">
+                            <span class="text-sm font-medium text-blue-800">{{ currentUser().role }}</span>
+                            <span class="text-xs text-blue-600">Usuario ID: {{ currentUser().id }}</span>
+                        </div>
+                    </div>
+
                     <p-button icon="pi pi-refresh" [loading]="isLoading()" (onClick)="refreshData()"
                         severity="secondary" [text]="true" pTooltip="Actualizar datos">
+                    </p-button>
+
+                    <p-button icon="pi pi-sign-out" label="Cerrar Sesión" (onClick)="logout()" severity="danger"
+                        [outlined]="true" pTooltip="Cerrar sesión">
                     </p-button>
                 </div>
             </div>

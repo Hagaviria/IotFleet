@@ -1,6 +1,5 @@
 import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -9,13 +8,14 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { DropdownModule } from 'primeng/dropdown';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
+
+// Shared Components
+import { GenericFormComponent } from '../../../../Shared/Components/generic-form/generic-form.component';
+import { FormFieldBase } from '../../../../Shared/Models/forms/form-field-base';
 
 // Services
 import { VehicleService, Vehicle } from '../../Services/vehicle.service';
@@ -49,7 +49,7 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
   isSimulating = signal<boolean>(false);
 
   // Forms
-  sensorDataForm: FormGroup;
+  sensorDataFields: FormFieldBase<string>[] = [];
 
   // Computed
   isAdmin = computed(() => this.authService.isAdmin());
@@ -57,25 +57,12 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
   constructor(
     private vehicleService: VehicleService,
     private authService: AuthService,
-    private fb: FormBuilder,
     private messageService: MessageService,
     private http: HttpClient
-  ) {
-    // Formulario para crear sensor data
-    this.sensorDataForm = this.fb.group({
-      vehicleId: ['', [Validators.required]],
-      latitude: [4.6097100, [Validators.required, Validators.min(-90), Validators.max(90)]],
-      longitude: [-74.0817500, [Validators.required, Validators.min(-180), Validators.max(180)]],
-      altitude: [2600.0, [Validators.required, Validators.min(0)]],
-      speed: [0, [Validators.required, Validators.min(0), Validators.max(200)]],
-      fuelLevel: [100, [Validators.required, Validators.min(0), Validators.max(100)]],
-      fuelConsumption: [8.5, [Validators.required, Validators.min(0.1), Validators.max(50)]],
-      engineTemperature: [85, [Validators.required, Validators.min(-40), Validators.max(150)]],
-      ambientTemperature: [22, [Validators.required, Validators.min(-40), Validators.max(60)]]
-    });
-  }
+  ) {}
 
   ngOnInit(): void {
+    this.initializeFormFields();
     this.loadVehicles();
   }
 
@@ -84,67 +71,90 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  private initializeFormFields(): void {
+    console.log('🔧 Initializing sensor data form fields...');
+    this.sensorDataFields = [
+      new FormFieldBase({ key: 'vehicleId', label: 'Vehículo', required: true, controlType: 'dropdown', order: 1 }),
+      new FormFieldBase({ key: 'latitude', label: 'Latitud', required: true, controlType: 'textbox', type: 'number', value: '4.6097100', order: 2 }),
+      new FormFieldBase({ key: 'longitude', label: 'Longitud', required: true, controlType: 'textbox', type: 'number', value: '-74.0817500', order: 3 }),
+      new FormFieldBase({ key: 'altitude', label: 'Altitud (m)', required: true, controlType: 'textbox', type: 'number', value: '2600.0', order: 4 }),
+      new FormFieldBase({ key: 'speed', label: 'Velocidad (km/h)', required: true, controlType: 'textbox', type: 'number', value: '0', order: 5 }),
+      new FormFieldBase({ key: 'fuelLevel', label: 'Nivel de Combustible (%)', required: true, controlType: 'textbox', type: 'number', value: '100', order: 6 }),
+      new FormFieldBase({ key: 'fuelConsumption', label: 'Consumo de Combustible (L/100km)', required: true, controlType: 'textbox', type: 'number', value: '8.5', order: 7 }),
+      new FormFieldBase({ key: 'engineTemperature', label: 'Temperatura del Motor (°C)', required: true, controlType: 'textbox', type: 'number', value: '85', order: 8 }),
+      new FormFieldBase({ key: 'ambientTemperature', label: 'Temperatura Ambiente (°C)', required: true, controlType: 'textbox', type: 'number', value: '22', order: 9 })
+    ];
+    console.log('✅ Sensor data form fields initialized successfully');
+  }
+
   // Cargar vehículos
   loadVehicles(): void {
     this.vehicleService.getVehicles()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (vehicles) => this.vehicles.set(vehicles),
+        next: (vehicles) => {
+          this.vehicles.set(vehicles);
+          this.updateVehicleOptions();
+        },
         error: (error) => console.error('Error loading vehicles:', error)
       });
   }
 
+  private updateVehicleOptions(): void {
+    const vehicleOptions = this.vehicles().map(v => ({
+      key: v.id,
+      value: `${v.plate} - ${v.brand} ${v.model}`
+    }));
+    
+    // Actualizar las opciones del dropdown de vehículos
+    const vehicleField = this.sensorDataFields.find(field => field.key === 'vehicleId');
+    if (vehicleField) {
+      vehicleField.options = vehicleOptions;
+    }
+  }
+
   // Mostrar dialog para crear sensor data
   showCreateSensorDataDialog(): void {
-    this.sensorDataForm.reset({
-      latitude: 4.6097100,
-      longitude: -74.0817500,
-      altitude: 2600.0,
-      speed: 0,
-      fuelLevel: 100,
-      fuelConsumption: 8.5,
-      engineTemperature: 85,
-      ambientTemperature: 22
-    });
     this.showCreateDialog.set(true);
   }
 
   // Crear sensor data
-  onCreateSensorData(): void {
-    if (this.sensorDataForm.valid) {
-      this.isLoading.set(true);
-      const sensorData: SensorDataRequest = this.sensorDataForm.value;
+  onCreateSensorDataSubmit(formData: Record<string, any>): void {
+    console.log('📝 Create sensor data form submitted:', formData);
+    this.isLoading.set(true);
+    const sensorData: SensorDataRequest = {
+      vehicleId: formData['vehicleId'],
+      latitude: parseFloat(formData['latitude']),
+      longitude: parseFloat(formData['longitude']),
+      altitude: parseFloat(formData['altitude']),
+      speed: parseFloat(formData['speed']),
+      fuelLevel: parseFloat(formData['fuelLevel']),
+      fuelConsumption: parseFloat(formData['fuelConsumption']),
+      engineTemperature: parseFloat(formData['engineTemperature']),
+      ambientTemperature: parseFloat(formData['ambientTemperature'])
+    };
 
-      // Simular envío al backend
-      this.sendSensorDataToBackend(sensorData).subscribe({
-        next: () => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'Datos de sensor enviados correctamente'
-          });
-          this.showCreateDialog.set(false);
-          this.sensorDataForm.reset();
-          this.isLoading.set(false);
-        },
-        error: (error) => {
-          console.error('Error sending sensor data:', error);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudieron enviar los datos del sensor'
-          });
-          this.isLoading.set(false);
-        }
-      });
-    } else {
-      this.markFormGroupTouched(this.sensorDataForm);
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Advertencia',
-        detail: 'Por favor complete todos los campos requeridos'
-      });
-    }
+    // Simular envío al backend
+    this.sendSensorDataToBackend(sensorData).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Datos de sensor enviados correctamente'
+        });
+        this.showCreateDialog.set(false);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error sending sensor data:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron enviar los datos del sensor'
+        });
+        this.isLoading.set(false);
+      }
+    });
   }
 
   // Enviar datos al backend
@@ -218,27 +228,8 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
   // Cancelar operación
   cancelCreate(): void {
     this.showCreateDialog.set(false);
-    this.sensorDataForm.reset();
   }
 
-  // Marcar todos los campos del formulario como tocados
-  private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach(key => {
-      const control = formGroup.get(key);
-      control?.markAsTouched();
-    });
-  }
-
-  // Obtener mensaje de error para un campo
-  getFieldError(form: FormGroup, fieldName: string): string {
-    const field = form.get(fieldName);
-    if (field?.errors && field.touched) {
-      if (field.errors['required']) return `${fieldName} es requerido`;
-      if (field.errors['min']) return `Valor mínimo: ${field.errors['min'].min}`;
-      if (field.errors['max']) return `Valor máximo: ${field.errors['max'].max}`;
-    }
-    return '';
-  }
 
   // Obtener nombre del vehículo
   getVehicleName(vehicleId: string): string {

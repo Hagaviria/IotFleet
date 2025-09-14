@@ -33,7 +33,7 @@ export class AuthService {
     return false;
   }
 
-  private getUserRole(): string {
+  getUserRole(): string {
     if (isPlatformBrowser(this.platformId)) {
       try {
         return window.localStorage.getItem(this.USER_ROLE_KEY) || 'User';
@@ -150,4 +150,16 @@ export class AuthService {
   isAdmin(): boolean {
     return this.userRole.value?.toLowerCase() === 'admin';
   }
+
+  getUserId(): string | null {
+    if (isPlatformBrowser(this.platformId)) {
+      try {
+        return window.localStorage.getItem(this.USER_ID_KEY);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
 }
