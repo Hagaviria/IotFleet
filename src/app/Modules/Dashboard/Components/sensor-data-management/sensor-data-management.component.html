@@ -6,18 +6,10 @@
       <p-button label="Crear Datos de Sensor" icon="pi pi-plus" (onClick)="showCreateSensorDataDialog()"
         [loading]="isLoading()">
       </p-button>
-
-      @if (!isSimulating()) {
-      <p-button label="Iniciar Simulación" icon="pi pi-play" severity="success" (onClick)="startSimulation()">
-      </p-button>
-      } @else {
-      <p-button label="Detener Simulación" icon="pi pi-stop" severity="danger" (onClick)="stopSimulation()">
-      </p-button>
-      }
     </div>
   </div>
 
-  @if (isSimulating()) {
+  @if (simulationStatus().isRunning) {
   <p-card class="mb-4">
     <div class="grid">
       <div class="col-12 md:col-8">

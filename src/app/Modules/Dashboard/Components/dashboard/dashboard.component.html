@@ -25,6 +25,23 @@
                             Desconectado } @case ('error') { Error } }
                         </span>
                     </div>
+
+                    <!-- Estado de la simulación -->
+                    <div class="flex align-items-center gap-2 px-2 py-1 border-round" [class]="
+              simulationStatus().isRunning
+                ? 'bg-blue-100 text-blue-800'
+                : 'bg-gray-100 text-gray-800'
+            ">
+                        <i class="pi" [class.pi-play]="simulationStatus().isRunning"
+                            [class.pi-pause]="!simulationStatus().isRunning"></i>
+                        <span class="text-sm font-medium">
+                            @if (simulationStatus().isRunning) {
+                            Simulación Activa ({{ simulationStatus().vehicleCount }} vehículos)
+                            } @else {
+                            Simulación Detenida
+                            }
+                        </span>
+                    </div>
                 </div>
                 <div class="flex align-items-center gap-3">
                     <!-- Información del usuario -->
@@ -43,6 +60,21 @@
                     <p-button icon="pi pi-sign-out" label="Cerrar Sesión" (onClick)="logout()" severity="danger"
                         [outlined]="true" pTooltip="Cerrar sesión">
                     </p-button>
+
+                    <!-- Controles de simulación (solo para administradores) -->
+                    @if (isAdmin()) {
+                    <div class="flex align-items-center gap-2">
+                        @if (simulationStatus().isRunning) {
+                        <p-button icon="pi pi-pause" severity="warn" (onClick)="stopSimulation()" [outlined]="true"
+                            pTooltip="Detener simulación" label="Detener">
+                        </p-button>
+                        } @else {
+                        <p-button icon="pi pi-play" severity="success" (onClick)="startSimulation()" [outlined]="true"
+                            pTooltip="Iniciar simulación" label="Iniciar">
+                        </p-button>
+                        }
+                    </div>
+                    }
                 </div>
             </div>
         </div>

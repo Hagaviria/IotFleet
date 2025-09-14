@@ -17,7 +17,7 @@ import { FormFieldBase } from '../../../../Shared/Models/forms/form-field-base';
 
 import { VehicleService, Vehicle } from '../../Services/vehicle.service';
 import { AuthService } from '../../../../Security/Services/auth.service';
-import { SimulationService } from '../../Services/simulation.service';
+import { SimulationControlService, SimulationStatus } from '../../Services/simulation-control.service';
 
 export interface SensorDataRequest {
   vehicleId: string;
@@ -43,7 +43,11 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
   vehicles = signal<Vehicle[]>([]);
   showCreateDialog = signal<boolean>(false);
   isLoading = signal<boolean>(false);
-  isSimulating = signal<boolean>(false);
+  simulationStatus = signal<SimulationStatus>({
+    isRunning: false,
+    vehicleCount: 0,
+    lastUpdate: new Date()
+  });
 
   sensorDataFields: FormFieldBase<string>[] = [];
 
@@ -54,12 +58,22 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private messageService: MessageService,
     private http: HttpClient,
-    private simulationService: SimulationService
+    private simulationControlService: SimulationControlService
   ) {}
 
   ngOnInit(): void {
     this.initializeFormFields();
     this.loadVehicles();
+    this.setupSubscriptions();
+  }
+
+  private setupSubscriptions(): void {
+    // Suscribirse al estado de la simulación
+    this.simulationControlService.simulationStatus$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(status => {
+        this.simulationStatus.set(status);
+      });
   }
 
   ngOnDestroy(): void {
@@ -153,36 +167,6 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
     });
   }
 
-  startSimulation(): void {
-    if (this.vehicles().length === 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Advertencia',
-        detail: 'No hay vehículos disponibles para simular'
-      });
-      return;
-    }
-
-    this.isSimulating.set(true);
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Simulación Iniciada',
-      detail: 'Generando datos de sensores realistas cada 2 segundos'
-    });
-
-    // Usar el servicio de simulación
-    this.simulationService.startSimulation(this.vehicles());
-  }
-
-  stopSimulation(): void {
-    this.isSimulating.set(false);
-    this.simulationService.stopSimulation();
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Simulación Detenida',
-      detail: 'Generación de datos de sensores detenida'
-    });
-  }
 
 
   cancelCreate(): void {

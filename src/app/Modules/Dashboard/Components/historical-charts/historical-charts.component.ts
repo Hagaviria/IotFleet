@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -204,10 +204,21 @@ export class HistoricalChartsComponent implements OnInit, OnDestroy {
     // Ordenar datos por fecha
     const sortedData = data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
-    // Preparar labels (fechas)
-    const labels = sortedData.map(d => new Date(d.date).toLocaleDateString());
+    // Preparar labels (fechas) con formato más legible
+    const labels = sortedData.map(d => {
+      const date = new Date(d.date);
+      return date.toLocaleDateString('es-ES', { 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    });
     
-    // Gráfico de velocidad
+    // Calcular distancia acumulada
+    const distanceData = this.calculateDistanceData(sortedData);
+    
+    // Gráfico de velocidad con estadísticas
     this.speedChartData.set({
       labels: labels,
       datasets: [{
@@ -216,10 +227,16 @@ export class HistoricalChartsComponent implements OnInit, OnDestroy {
         borderColor: '#3b82f6',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         fill: true,
+      }, {
+        label: 'Velocidad Promedio',
+        data: new Array(sortedData.length).fill(this.getAverageSpeed()),
+        borderColor: '#1e40af',
+        backgroundColor: 'transparent',
+        fill: false
       }]
     });
 
-    // Gráfico de combustible
+    // Gráfico de combustible con alertas
     this.fuelChartData.set({
       labels: labels,
       datasets: [{
@@ -228,15 +245,27 @@ export class HistoricalChartsComponent implements OnInit, OnDestroy {
         borderColor: '#10b981',
         backgroundColor: 'rgba(16, 185, 129, 0.1)',
         fill: true,
+      }, {
+        label: 'Alerta Bajo Combustible (20%)',
+        data: new Array(sortedData.length).fill(20),
+        borderColor: '#ef4444',
+        backgroundColor: 'transparent',
+        fill: false
+      }, {
+        label: 'Alerta Crítico (5%)',
+        data: new Array(sortedData.length).fill(5),
+        borderColor: '#dc2626',
+        backgroundColor: 'transparent',
+        fill: false
       }]
     });
 
-    // Gráfico de distancia
+    // Gráfico de distancia acumulada
     this.distanceChartData.set({
       labels: labels,
       datasets: [{
-        label: 'Distancia (km)',
-        data: sortedData.map(d => d.distance),
+        label: 'Distancia Acumulada (km)',
+        data: distanceData,
         borderColor: '#f59e0b',
         backgroundColor: 'rgba(245, 158, 11, 0.1)',
         fill: true,
@@ -257,20 +286,56 @@ export class HistoricalChartsComponent implements OnInit, OnDestroy {
     });
   }
 
+  private calculateDistanceData(data: HistoricalData[]): number[] {
+    // Calcular distancia acumulada basada en coordenadas GPS
+    let totalDistance = 0;
+    return data.map((d, index) => {
+      if (index === 0) return 0;
+      
+      const prevData = data[index - 1];
+      const distance = this.calculateDistanceBetweenPoints(
+        prevData.latitude || 0, prevData.longitude || 0,
+        d.latitude || 0, d.longitude || 0
+      );
+      
+      totalDistance += distance;
+      return Math.round(totalDistance * 100) / 100; // Redondear a 2 decimales
+    });
+  }
+
+  private calculateDistanceBetweenPoints(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371; // Radio de la Tierra en km
+    const dLat = this.deg2rad(lat2 - lat1);
+    const dLon = this.deg2rad(lon2 - lon1);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  }
+
+  private deg2rad(deg: number): number {
+    return deg * (Math.PI/180);
+  }
+
   private calculateEfficiencyData(data: HistoricalData[]): number[] {
     // Calcular eficiencia basada en distancia y combustible
     return data.map((d, index) => {
       if (index === 0) return 0;
       
       const prevData = data[index - 1];
-      const distanceDiff = d.distance - prevData.distance;
+      const distanceDiff = this.calculateDistanceBetweenPoints(
+        prevData.latitude || 0, prevData.longitude || 0,
+        d.latitude || 0, d.longitude || 0
+      );
       const fuelDiff = prevData.fuelLevel - d.fuelLevel;
       
       if (fuelDiff <= 0 || distanceDiff <= 0) return 0;
       
       // Asumiendo un tanque de 50L
       const fuelConsumed = (fuelDiff / 100) * 50;
-      return fuelConsumed > 0 ? distanceDiff / fuelConsumed : 0;
+      return fuelConsumed > 0 ? Math.round((distanceDiff / fuelConsumed) * 100) / 100 : 0;
     });
   }
 
@@ -350,8 +415,10 @@ export class HistoricalChartsComponent implements OnInit, OnDestroy {
 
   getTotalDistance(): number {
     const data = this.historicalData();
-    if (data.length === 0) return 0;
-    return data[data.length - 1]?.distance - data[0]?.distance || 0;
+    if (data.length < 2) return 0;
+    
+    const distanceData = this.calculateDistanceData(data);
+    return distanceData[distanceData.length - 1] || 0;
   }
 
   getAverageEfficiency(): number {

@@ -77,6 +77,12 @@ export interface Geofence {
   radius: number;
   type: 'inclusion' | 'exclusion';
   isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  description?: string;
+  color?: string;
+  alertOnEnter?: boolean;
+  alertOnExit?: boolean;
 }
 
 export interface DashboardStats {

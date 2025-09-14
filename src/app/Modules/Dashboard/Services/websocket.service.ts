@@ -297,6 +297,7 @@ export class WebSocketService {
   }
 
   // Método para enviar actualizaciones de ubicación directamente (para simulación)
+  // NOTA: Este método ya no se usa, los datos vienen del backend
   sendLocationUpdate(vehicleId: string, location: any): void {
     this.realTimeUpdateSubject.next({
       vehicleId: vehicleId,

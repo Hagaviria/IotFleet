@@ -12,7 +12,11 @@
       [rows]="field().rows || 3"></textarea>
     } @case ('checkbox') {
     <p-checkbox [binary]="true" [formControlName]="field().key" [inputId]="field().key"></p-checkbox>
-
+    } @case ('dropdown') {
+    <p-dropdown [formControlName]="field().key" [id]="field().key" [options]="field().options || []" optionLabel="value"
+      optionValue="key" [placeholder]="'Selecciona ' + field().label" [showClear]="!field().required" [filter]="true"
+      filterBy="value" [style]="{'width': '100%'}">
+    </p-dropdown>
     } } @if (control.invalid && (control.dirty || control.touched)) { @if
     (control.errors?.['required']) {
     <div class="required-label">{{ field().label }} es obligatorio</div>

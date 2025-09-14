@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, interval, switchMap, catchError, of, throw
 import { tap, map } from 'rxjs/operators';
 import { DashboardStats, Vehicle, Location, HistoricalData } from '../Models/dashboard.models';
 import { AuthService } from '../../../Security/Services/auth.service';
+import { PrivacyService } from '../../../Security/Services/privacy.service';
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +25,7 @@ export class DashboardService {
 
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+  private privacyService = inject(PrivacyService);
 
   constructor() {
     this.startRealTimeUpdates();
@@ -43,10 +45,10 @@ export class DashboardService {
       }
     });
 
-    interval(10000).pipe( // Cada 10 segundos
-      switchMap(() => this.getCurrentLocations()),
+    interval(5000).pipe( // Cada 5 segundos para datos en tiempo real
+      switchMap(() => this.getRealTimeData()),
       catchError(error => {
-        console.error('Error updating locations:', error);
+        console.error('Error updating real-time data:', error);
         return of([]);
       })
     ).subscribe(locations => {
@@ -59,6 +61,7 @@ export class DashboardService {
       headers: this.authService.getAuthHeaders()
     }).pipe(
       map(response => {
+        console.log('Dashboard stats response:', response);
         if (response && response.success && response.data) {
           const data = response.data;
           return {
@@ -71,6 +74,7 @@ export class DashboardService {
             fuelConsumption: 0
           } as DashboardStats;
         }
+        console.log('Invalid dashboard stats response format');
         throw new Error('Invalid response format');
       }),
       tap(stats => this.cacheStats(stats)),
@@ -83,13 +87,14 @@ export class DashboardService {
   }
 
   getVehicles(): Observable<Vehicle[]> {
-    return this.http.get<any>(`${this.API_BASE_URL}/Dashboard/vehicle-status`, {
+    return this.http.get<any>(`${this.API_BASE_URL}/Vehicle`, {
       headers: this.authService.getAuthHeaders()
     }).pipe(
       map(response => {
-        if (response && response.success && response.data) {
+        console.log('Vehicles response:', response);
+        if (response && response.success && response.data && Array.isArray(response.data)) {
           return response.data.map((vehicle: any) => ({
-            id: vehicle.Id,
+            id: this.privacyService.maskVehicleId(vehicle.Id),
             name: `${vehicle.Brand} ${vehicle.Model}`,
             plate: vehicle.LicensePlate,
             type: 'car' as const,
@@ -99,6 +104,7 @@ export class DashboardService {
             fuelEfficiency: vehicle.AverageConsumption || 0
           })) as Vehicle[];
         }
+        console.log('No vehicles data available');
         return [];
       }),
       tap(vehicles => this.cacheVehicles(vehicles)),
@@ -115,7 +121,8 @@ export class DashboardService {
       headers: this.authService.getAuthHeaders()
     }).pipe(
       map(response => {
-        if (response && response.success && response.data) {
+        console.log('Current locations response:', response);
+        if (response && response.success && response.data && Array.isArray(response.data)) {
           const allLocations = this.mapSensorDataToLocations(response.data);
           
           // Filtrar para obtener solo la ubicación más reciente por vehículo
@@ -127,6 +134,7 @@ export class DashboardService {
           
           return latestLocations;
         }
+        console.log('No current locations data available');
         return [];
       }),
       tap(locations => this.cacheLocations(locations)),
@@ -138,39 +146,127 @@ export class DashboardService {
     );
   }
 
+  getRealTimeData(): Observable<Location[]> {
+    return this.http.get<any>(`${this.API_BASE_URL}/Simulation/realtime-data`, {
+      headers: this.authService.getAuthHeaders()
+    }).pipe(
+      map(response => {
+        console.log('Real-time data response:', response);
+        if (response && response.success && response.data && Array.isArray(response.data)) {
+          const realTimeLocations = response.data.map((data: any) => ({
+            id: this.privacyService.maskDeviceId(data.VehicleId),
+            vehicleId: this.privacyService.maskVehicleId(data.VehicleId),
+            latitude: data.Latitude,
+            longitude: data.Longitude,
+            timestamp: new Date(data.Timestamp),
+            speed: data.Speed || 0,
+            fuelLevel: data.FuelLevel || 0,
+            isOnline: true,
+            altitude: data.Altitude || 0,
+            fuelConsumption: data.FuelConsumption || 0,
+            engineTemperature: data.EngineTemperature || 0,
+            ambientTemperature: data.AmbientTemperature || 0,
+            vehicleInfo: {
+              licensePlate: data.LicensePlate,
+              model: data.Model,
+              brand: data.Brand,
+              fuelCapacity: 75, // Valor por defecto
+              averageConsumption: data.FuelConsumption || 8.5,
+              fleetId: this.privacyService.maskDeviceId(data.VehicleId),
+              createdAt: new Date(),
+              lastMaintenance: new Date()
+            }
+          })) as Location[];
+
+          // Actualizar vehículos con datos en tiempo real
+          if (realTimeLocations.length > 0) {
+            this.createVehiclesFromLocations(realTimeLocations);
+          }
+
+          return realTimeLocations;
+        }
+        console.log('No real-time data available, falling back to historical data');
+        return [];
+      }),
+      catchError(error => {
+        console.error('Error fetching real-time data:', error);
+        // Fallback a datos históricos si falla la simulación
+        return this.getCurrentLocations();
+      })
+    );
+  }
+
   getHistoricalData(vehicleId: string, startDate: Date, endDate: Date): Observable<HistoricalData[]> {
-    return this.http.get<any>(`${this.API_BASE_URL}/SensorData`, {
+    const params = new URLSearchParams({
+      vehicleId: vehicleId,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      limit: '1000'
+    });
+
+    return this.http.get<any>(`${this.API_BASE_URL}/Dashboard/historical-data?${params}`, {
       headers: this.authService.getAuthHeaders()
     }).pipe(
       map(response => {
         if (response && response.success && response.data) {
-          const filteredData = response.data.filter((item: any) => {
-            const itemDate = new Date(item.Timestamp);
-            return item.VehicleId === vehicleId && 
-                   itemDate >= startDate && 
-                   itemDate <= endDate;
+          return response.data.map((item: any) => {
+            const maskedCoords = this.privacyService.maskCoordinates(item.Latitude, item.Longitude);
+            
+            return {
+              id: this.privacyService.maskDeviceId(item.Id),
+              vehicleId: this.privacyService.maskVehicleId(item.VehicleId),
+              date: item.Timestamp,
+              speed: item.Speed || 0,
+              fuelLevel: item.FuelLevel || 0,
+              distance: 0, // Calculado en el frontend
+              efficiency: item.FuelConsumption || 0,
+              temperature: item.EngineTemperature || 0,
+              latitude: maskedCoords.latitude,
+              longitude: maskedCoords.longitude,
+              altitude: item.Altitude || 0,
+              fuelConsumption: item.FuelConsumption || 0,
+              ambientTemperature: item.AmbientTemperature || 0,
+              vehicle: item.Vehicle ? {
+                ...item.Vehicle,
+                LicensePlate: item.Vehicle.LicensePlate,
+                Model: item.Vehicle.Model,
+                Brand: item.Vehicle.Brand,
+                FuelCapacity: item.Vehicle.FuelCapacity,
+                AverageConsumption: item.Vehicle.AverageConsumption
+              } : undefined
+            } as HistoricalData;
           });
-          
-          return filteredData.map((item: any) => ({
-            id: item.Id,
-            vehicleId: item.VehicleId,
-            date: item.Timestamp,
-            speed: item.Speed || 0,
-            fuelLevel: item.FuelLevel || 0,
-            distance: 0, // No disponible en el backend actual
-            efficiency: item.FuelConsumption || 0,
-            temperature: item.EngineTemperature || 0,
-            latitude: item.Latitude,
-            longitude: item.Longitude,
-            altitude: item.Altitude || 0,
-            fuelConsumption: item.FuelConsumption || 0,
-            ambientTemperature: item.AmbientTemperature || 0
-          })) as HistoricalData[];
+        }
+        return [];
+      }),
+      tap(data => this.cacheHistoricalData(vehicleId, data)),
+      catchError(error => {
+        console.error('Error fetching historical data:', error);
+        const cachedData = this.getCachedHistoricalData(vehicleId);
+        return cachedData.length > 0 ? of(cachedData) : of([]);
+      })
+    );
+  }
+
+  getHistoricalStatistics(vehicleId: string, startDate: Date, endDate: Date, groupBy: string = 'day'): Observable<any[]> {
+    const params = new URLSearchParams({
+      vehicleId: vehicleId,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      groupBy: groupBy
+    });
+
+    return this.http.get<any>(`${this.API_BASE_URL}/Dashboard/historical-statistics?${params}`, {
+      headers: this.authService.getAuthHeaders()
+    }).pipe(
+      map(response => {
+        if (response && response.success && response.data) {
+          return response.data;
         }
         return [];
       }),
       catchError(error => {
-        console.error('Error fetching historical data:', error);
+        console.error('Error fetching historical statistics:', error);
         return of([]);
       })
     );
@@ -179,30 +275,35 @@ export class DashboardService {
   private mapSensorDataToLocations(sensorData: any[]): Location[] {
     return sensorData
       .filter(data => data.Latitude && data.Longitude)
-      .map(data => ({
-        id: data.Id,
-        vehicleId: data.VehicleId,
-        latitude: data.Latitude,
-        longitude: data.Longitude,
-        timestamp: new Date(data.Timestamp),
-        speed: data.Speed || 0,
-        fuelLevel: data.FuelLevel || 0,
-        isOnline: true,
-        altitude: data.Altitude || 0,
-        fuelConsumption: data.FuelConsumption || 0,
-        engineTemperature: data.EngineTemperature || 0,
-        ambientTemperature: data.AmbientTemperature || 0,
-        vehicleInfo: data.Vehicle ? {
-          licensePlate: data.Vehicle.LicensePlate,
-          model: data.Vehicle.Model,
-          brand: data.Vehicle.Brand,
-          fuelCapacity: data.Vehicle.FuelCapacity,
-          averageConsumption: data.Vehicle.AverageConsumption,
-          fleetId: data.Vehicle.FleetId,
-          createdAt: new Date(data.Vehicle.CreatedAt),
-          lastMaintenance: new Date(data.Vehicle.LastMaintenance)
-        } : undefined
-      }));
+      .map(data => {
+        // Enmascarar coordenadas para usuarios no-admin
+        const maskedCoords = this.privacyService.maskCoordinates(data.Latitude, data.Longitude);
+        
+        return {
+          id: this.privacyService.maskDeviceId(data.Id),
+          vehicleId: this.privacyService.maskVehicleId(data.VehicleId),
+          latitude: maskedCoords.latitude,
+          longitude: maskedCoords.longitude,
+          timestamp: new Date(data.Timestamp),
+          speed: data.Speed || 0,
+          fuelLevel: data.FuelLevel || 0,
+          isOnline: true,
+          altitude: data.Altitude || 0,
+          fuelConsumption: data.FuelConsumption || 0,
+          engineTemperature: data.EngineTemperature || 0,
+          ambientTemperature: data.AmbientTemperature || 0,
+          vehicleInfo: data.Vehicle ? {
+            licensePlate: data.Vehicle.LicensePlate,
+            model: data.Vehicle.Model,
+            brand: data.Vehicle.Brand,
+            fuelCapacity: data.Vehicle.FuelCapacity,
+            averageConsumption: data.Vehicle.AverageConsumption,
+            fleetId: this.privacyService.maskDeviceId(data.Vehicle.FleetId),
+            createdAt: new Date(data.Vehicle.CreatedAt),
+            lastMaintenance: new Date(data.Vehicle.LastMaintenance)
+          } : undefined
+        };
+      });
   }
 
   private getLatestLocationsPerVehicle(locations: Location[]): Location[] {
@@ -223,7 +324,7 @@ export class DashboardService {
     const vehicles: Vehicle[] = locations.map(location => {
       const vehicleInfo = location.vehicleInfo;
       return {
-        id: location.vehicleId,
+        id: location.vehicleId, // Ya está enmascarado en mapSensorDataToLocations
         name: vehicleInfo ? `${vehicleInfo.brand} ${vehicleInfo.model}` : `Vehículo ${location.vehicleId}`,
         plate: vehicleInfo?.licensePlate || 'N/A',
         type: 'car' as const,
@@ -291,9 +392,37 @@ export class DashboardService {
     localStorage.setItem('dashboard_locations', JSON.stringify(locations));
   }
 
+  cacheHistoricalData(vehicleId: string, data: HistoricalData[]): void {
+    const key = `dashboard_historical_${vehicleId}`;
+    localStorage.setItem(key, JSON.stringify({
+      data: data,
+      timestamp: Date.now()
+    }));
+  }
+
+  getCachedHistoricalData(vehicleId: string): HistoricalData[] {
+    const key = `dashboard_historical_${vehicleId}`;
+    const cached = localStorage.getItem(key);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      // Cache válido por 1 hora
+      if (Date.now() - parsed.timestamp < 3600000) {
+        return parsed.data;
+      }
+    }
+    return [];
+  }
+
   clearCache(): void {
     localStorage.removeItem('dashboard_stats');
     localStorage.removeItem('dashboard_vehicles');
     localStorage.removeItem('dashboard_locations');
+    
+    // Limpiar caché de datos históricos
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('dashboard_historical_')) {
+        localStorage.removeItem(key);
+      }
+    });
   }
 }

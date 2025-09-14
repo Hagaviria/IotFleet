@@ -22,9 +22,11 @@ import { MessageService } from 'primeng/api';
 // Services
 import { MapService } from '../../Services/map.service';
 import { OfflineService } from '../../Services/offline.service';
+import { GeofenceService, Geofence } from '../../Services/geofence.service';
+import { RouteService, HistoricalRoute } from '../../Services/route.service';
 
 // Models
-import { Vehicle, Location, Geofence } from '../../Models/dashboard.models';
+import { Vehicle, Location } from '../../Models/dashboard.models';
 
 declare global {
   interface Window {
@@ -47,12 +49,17 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
   private destroy$ = new Subject<void>();
   private mapInstance: any = null;
   private markers: Map<string, any> = new Map();
+  private geofenceLayers: Map<string, any> = new Map();
+  private routeLayers: Map<string, any> = new Map();
 
   // Signals
   isLoading = signal<boolean>(true);
   selectedVehicle = signal<Vehicle | null>(null);
   showGeofenceDialog = signal<boolean>(false);
+  showRouteDialog = signal<boolean>(false);
   geofences = signal<Geofence[]>([]);
+  historicalRoutes = signal<HistoricalRoute[]>([]);
+  selectedRoute = signal<HistoricalRoute | null>(null);
 
   // Computed
   filteredVehicles = computed(() => {
@@ -80,17 +87,24 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
   constructor(
     private mapService: MapService,
     private offlineService: OfflineService,
+    private geofenceService: GeofenceService,
+    private routeService: RouteService,
     private messageService: MessageService
   ) {
     effect(() => {
       const vehicles = this.vehicles();
       const locations = this.locations();
-      this.updateMapMarkers(vehicles, locations);
+      // Solo actualizar marcadores si el mapa está inicializado
+      if (this.mapInstance && vehicles.length > 0) {
+        this.updateMapMarkers(vehicles, locations);
+      }
     });
   }
 
   ngOnInit(): void {
     this.setupSubscriptions();
+    this.loadGeofences();
+    this.loadHistoricalRoutes();
   }
 
   ngAfterViewInit(): void {
@@ -162,9 +176,16 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
 
       this.isLoading.set(false);
       
+      // Actualizar marcadores después de que el mapa esté inicializado
       setTimeout(() => {
         if (this.mapInstance) {
           this.mapInstance.resize();
+          // Forzar actualización de marcadores
+          const vehicles = this.vehicles();
+          const locations = this.locations();
+          if (vehicles.length > 0) {
+            this.updateMapMarkers(vehicles, locations);
+          }
         }
       }, 1000);
     } catch (error) {
@@ -198,8 +219,11 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private updateMapMarkers(vehicles: Vehicle[], locations: Location[]): void {
     if (!this.mapInstance) {
+      console.log('Map instance not ready, skipping marker update');
       return;
     }
+
+    console.log('Updating map markers:', { vehicles: vehicles.length, locations: locations.length });
 
     // Actualizar marcadores existentes o crear nuevos
     vehicles.forEach((vehicle) => {
@@ -213,6 +237,8 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
           // Crear nuevo marcador
           this.addVehicleMarker(vehicle, location);
         }
+      } else {
+        console.log(`No location found for vehicle ${vehicle.id}`);
       }
     });
 
@@ -274,7 +300,7 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
         location.latitude, location.longitude
       );
 
-      if (distance > 0.001) { // Solo actualizar si se movió más de ~100 metros
+      if (distance > 0.0001) { // Solo actualizar si se movió más de ~10 metros (más sensible)
         // Agregar clase de animación para movimiento
         const element = existingMarker.getElement();
         if (element) {
@@ -400,9 +426,6 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  private loadGeofences(): void {
-    // API de geofences no disponible
-  }
 
   onVehicleSelect(vehicle: Vehicle | null): void {
     this.selectedVehicle.set(vehicle);
@@ -418,6 +441,15 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
         });
       }
     }
+
+    // Forzar actualización de marcadores después de seleccionar vehículo
+    setTimeout(() => {
+      const vehicles = this.vehicles();
+      const locations = this.locations();
+      if (this.mapInstance && vehicles.length > 0) {
+        this.updateMapMarkers(vehicles, locations);
+      }
+    }, 100);
   }
 
   onShowAllVehicles(): void {
@@ -500,5 +532,308 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
         zoom: 12,
       });
     }
+  }
+
+  // Métodos para geofences
+  private loadGeofences(): void {
+    this.geofenceService.loadGeofences()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (geofences) => {
+          this.geofences.set(geofences);
+          if (this.mapInstance) {
+            this.updateGeofenceLayers(geofences);
+          }
+        },
+        error: (error) => {
+          console.error('Error loading geofences:', error);
+        }
+      });
+  }
+
+  private updateGeofenceLayers(geofences: Geofence[]): void {
+    if (!this.mapInstance) return;
+
+    // Limpiar capas existentes
+    this.clearGeofenceLayers();
+
+    geofences.forEach(geofence => {
+      if (geofence.isActive) {
+        this.addGeofenceLayer(geofence);
+      }
+    });
+  }
+
+  private addGeofenceLayer(geofence: Geofence): void {
+    if (!this.mapInstance) return;
+
+    const sourceId = `geofence-${geofence.id}`;
+    const layerId = `geofence-layer-${geofence.id}`;
+
+    // Crear círculo para la geofence
+    const circle = this.createCircle(geofence.center.latitude, geofence.center.longitude, geofence.radius);
+
+    // Agregar fuente
+    this.mapInstance.addSource(sourceId, {
+      type: 'geojson',
+      data: circle
+    });
+
+    // Agregar capa de relleno
+    this.mapInstance.addLayer({
+      id: layerId,
+      type: 'fill',
+      source: sourceId,
+      paint: {
+        'fill-color': geofence.color || this.getGeofenceColor(geofence.type),
+        'fill-opacity': 0.2
+      }
+    });
+
+    // Agregar capa de borde
+    this.mapInstance.addLayer({
+      id: `${layerId}-border`,
+      type: 'line',
+      source: sourceId,
+      paint: {
+        'line-color': geofence.color || this.getGeofenceColor(geofence.type),
+        'line-width': 2,
+        'line-opacity': 0.8
+      }
+    });
+
+    // Agregar etiqueta
+    this.mapInstance.addLayer({
+      id: `${layerId}-label`,
+      type: 'symbol',
+      source: sourceId,
+      layout: {
+        'text-field': geofence.name,
+        'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+        'text-size': 12,
+        'text-offset': [0, 0],
+        'text-anchor': 'center'
+      },
+      paint: {
+        'text-color': '#000000',
+        'text-halo-color': '#FFFFFF',
+        'text-halo-width': 2
+      }
+    });
+
+    this.geofenceLayers.set(geofence.id, { sourceId, layerId });
+  }
+
+  private createCircle(lat: number, lng: number, radius: number): any {
+    const points = 64;
+    const coords = [];
+    
+    for (let i = 0; i < points; i++) {
+      const angle = (i * 360) / points;
+      const dx = radius * Math.cos(angle * Math.PI / 180);
+      const dy = radius * Math.sin(angle * Math.PI / 180);
+      
+      const newLat = lat + (dy / 111320); // Aproximación: 1 grado ≈ 111320 metros
+      const newLng = lng + (dx / (111320 * Math.cos(lat * Math.PI / 180)));
+      
+      coords.push([newLng, newLat]);
+    }
+    
+    coords.push(coords[0]); // Cerrar el polígono
+    
+    return {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [coords]
+      }
+    };
+  }
+
+  private getGeofenceColor(type: string): string {
+    switch (type) {
+      case 'inclusion':
+        return '#10b981';
+      case 'exclusion':
+        return '#ef4444';
+      default:
+        return '#6b7280';
+    }
+  }
+
+  private clearGeofenceLayers(): void {
+    this.geofenceLayers.forEach((layers, geofenceId) => {
+      if (this.mapInstance.getLayer(layers.layerId)) {
+        this.mapInstance.removeLayer(layers.layerId);
+      }
+      if (this.mapInstance.getLayer(`${layers.layerId}-border`)) {
+        this.mapInstance.removeLayer(`${layers.layerId}-border`);
+      }
+      if (this.mapInstance.getLayer(`${layers.layerId}-label`)) {
+        this.mapInstance.removeLayer(`${layers.layerId}-label`);
+      }
+      if (this.mapInstance.getSource(layers.sourceId)) {
+        this.mapInstance.removeSource(layers.sourceId);
+      }
+    });
+    this.geofenceLayers.clear();
+  }
+
+  // Métodos para rutas históricas
+  private loadHistoricalRoutes(): void {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7); // Últimos 7 días
+
+    this.routeService.getHistoricalRoutes('', startDate, endDate, 20)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (routes) => {
+          this.historicalRoutes.set(routes);
+        },
+        error: (error) => {
+          console.error('Error loading historical routes:', error);
+        }
+      });
+  }
+
+  onShowRouteDialog(): void {
+    this.showRouteDialog.set(true);
+  }
+
+  onSelectRoute(route: HistoricalRoute): void {
+    this.selectedRoute.set(route);
+    this.showRouteDialog.set(false);
+    this.displayRouteOnMap(route);
+  }
+
+  private displayRouteOnMap(route: HistoricalRoute): void {
+    if (!this.mapInstance || !route.points.length) return;
+
+    // Limpiar rutas existentes
+    this.clearRouteLayers();
+
+    const routeId = `route-${route.id}`;
+    const sourceId = `route-source-${route.id}`;
+
+    // Crear GeoJSON para la ruta
+    const routeGeoJSON = {
+      type: 'Feature',
+      geometry: {
+        type: 'LineString',
+        coordinates: route.points.map(point => [point.longitude, point.latitude])
+      },
+      properties: {
+        routeId: route.id,
+        vehicleId: route.vehicleId,
+        totalDistance: route.totalDistance,
+        averageSpeed: route.averageSpeed
+      }
+    };
+
+    // Agregar fuente
+    this.mapInstance.addSource(sourceId, {
+      type: 'geojson',
+      data: routeGeoJSON
+    });
+
+    // Agregar capa de línea
+    this.mapInstance.addLayer({
+      id: routeId,
+      type: 'line',
+      source: sourceId,
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round'
+      },
+      paint: {
+        'line-color': '#3b82f6',
+        'line-width': 4,
+        'line-opacity': 0.8
+      }
+    });
+
+    // Agregar marcadores de inicio y fin
+    this.addRouteMarkers(route, sourceId);
+
+    // Ajustar vista para mostrar toda la ruta
+    this.fitRouteBounds(route);
+
+    this.routeLayers.set(route.id, { sourceId, routeId });
+  }
+
+  private addRouteMarkers(route: HistoricalRoute, sourceId: string): void {
+    if (!this.mapInstance || route.points.length < 2) return;
+
+    const startPoint = route.points[0];
+    const endPoint = route.points[route.points.length - 1];
+
+    // Marcador de inicio
+    const startMarker = new window.maplibregl.Marker({
+      color: '#10b981',
+      scale: 1.2
+    })
+      .setLngLat([startPoint.longitude, startPoint.latitude])
+      .setPopup(new window.maplibregl.Popup().setHTML(`
+        <div class="p-2">
+          <h4 class="font-bold text-green-600">Inicio de Ruta</h4>
+          <p class="text-sm">${startPoint.timestamp.toLocaleString()}</p>
+          <p class="text-sm">Velocidad: ${startPoint.speed} km/h</p>
+          <p class="text-sm">Combustible: ${startPoint.fuelLevel}%</p>
+        </div>
+      `))
+      .addTo(this.mapInstance);
+
+    // Marcador de fin
+    const endMarker = new window.maplibregl.Marker({
+      color: '#ef4444',
+      scale: 1.2
+    })
+      .setLngLat([endPoint.longitude, endPoint.latitude])
+      .setPopup(new window.maplibregl.Popup().setHTML(`
+        <div class="p-2">
+          <h4 class="font-bold text-red-600">Fin de Ruta</h4>
+          <p class="text-sm">${endPoint.timestamp.toLocaleString()}</p>
+          <p class="text-sm">Velocidad: ${endPoint.speed} km/h</p>
+          <p class="text-sm">Combustible: ${endPoint.fuelLevel}%</p>
+          <p class="text-sm">Distancia Total: ${route.totalDistance.toFixed(2)} km</p>
+        </div>
+      `))
+      .addTo(this.mapInstance);
+
+    this.routeLayers.set(`${route.id}-start`, startMarker);
+    this.routeLayers.set(`${route.id}-end`, endMarker);
+  }
+
+  private fitRouteBounds(route: HistoricalRoute): void {
+    if (!this.mapInstance || route.points.length < 2) return;
+
+    const bounds = new window.maplibregl.LngLatBounds();
+    route.points.forEach(point => {
+      bounds.extend([point.longitude, point.latitude]);
+    });
+
+    this.mapInstance.fitBounds(bounds, { padding: 50 });
+  }
+
+  private clearRouteLayers(): void {
+    this.routeLayers.forEach((layer, routeId) => {
+      if (typeof layer === 'object' && layer.remove) {
+        // Es un marcador
+        layer.remove();
+      } else if (this.mapInstance.getLayer(routeId)) {
+        // Es una capa
+        this.mapInstance.removeLayer(routeId);
+      }
+      if (this.mapInstance.getSource(`route-source-${routeId}`)) {
+        this.mapInstance.removeSource(`route-source-${routeId}`);
+      }
+    });
+    this.routeLayers.clear();
+  }
+
+  onClearRoute(): void {
+    this.selectedRoute.set(null);
+    this.clearRouteLayers();
   }
 }
