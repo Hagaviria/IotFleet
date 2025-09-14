@@ -127,6 +127,15 @@ export class AuthService {
     return this.userRole.value?.toLowerCase() === 'admin';
   }
 
+  isOperator(): boolean {
+    return this.userRole.value?.toLowerCase() === 'operator';
+  }
+
+  isAdminOrOperator(): boolean {
+    const role = this.userRole.value?.toLowerCase();
+    return role === 'admin' || role === 'operator';
+  }
+
   getUserId(): string | null {
     if (isPlatformBrowser(this.platformId)) {
       try {

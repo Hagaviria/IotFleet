@@ -65,7 +65,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return {
       id: userId,
       role: userRole,
-      isAdmin: userRole === 'Admin'
+      isAdmin: userRole === 'Admin',
+      isOperator: userRole === 'Operator'
     };
   });
 

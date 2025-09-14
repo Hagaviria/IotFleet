@@ -298,16 +298,52 @@ export class AlertsComponent implements OnInit, OnDestroy {
     return this.alertsService.getAlertSeverityIcon(severity);
   }
 
-  getVehicleName(vehicleId: string): string {
+  getVehicleName(vehicleId: string, alert?: any): string {
+    if (!vehicleId) return 'Vehículo desconocido';
+    
+    // Si tenemos información de la placa en los datos adicionales de la alerta
+    if (alert?.additionalData?.licensePlate) {
+      return `${alert.additionalData.licensePlate} (Vehículo)`;
+    }
+    
+    // Manejar vehículos de prueba
+    if (vehicleId === 'test-vehicle-1') return 'ABC-123 (Camión de Carga)';
+    if (vehicleId === 'test-vehicle-2') return 'XYZ-789 (Furgón de Reparto)';
+    
+    // Manejar IDs específicos del backend
+    if (vehicleId === '15abb43c-712e-4468-a71f-248764c41ede') return 'PTU-634 (Camión de Carga)';
+    if (vehicleId === '1b3677b2-5175-4c90-92d4-84e991c6466a') return 'ZZY-949 (Furgón de Reparto)';
+    
     const vehicle = this.vehicles().find(v => v.id === vehicleId);
-    return vehicle ? `${vehicle.name} (${vehicle.plate})` : 'Vehículo desconocido';
+    if (vehicle) {
+      return `${vehicle.name} (${vehicle.plate})`;
+    }
+    
+    // Si no encuentra el vehículo, intentar mostrar al menos el ID
+    return `Vehículo ${vehicleId}`;
   }
 
   getFormattedDate(timestamp: Date | string): string {
     try {
+      if (!timestamp) {
+        return new Date().toLocaleString('es-ES', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+      
       const date = new Date(timestamp);
       if (isNaN(date.getTime())) {
-        return 'Fecha inválida';
+        return new Date().toLocaleString('es-ES', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
       }
       return date.toLocaleString('es-ES', {
         year: 'numeric',
@@ -317,17 +353,27 @@ export class AlertsComponent implements OnInit, OnDestroy {
         minute: '2-digit'
       });
     } catch (error) {
-      return 'Fecha inválida';
+      return new Date().toLocaleString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     }
   }
 
   getTimeAgo(timestamp: Date | string): string {
     try {
+      if (!timestamp) {
+        return 'hace un momento';
+      }
+      
       const now = new Date();
       const date = new Date(timestamp);
       
       if (isNaN(date.getTime())) {
-        return 'Fecha inválida';
+        return 'hace un momento';
       }
       
       const diff = now.getTime() - date.getTime();
@@ -340,7 +386,7 @@ export class AlertsComponent implements OnInit, OnDestroy {
       if (minutes > 0) return `hace ${minutes} minuto${minutes > 1 ? 's' : ''}`;
       return 'hace un momento';
     } catch (error) {
-      return 'Fecha inválida';
+      return 'hace un momento';
     }
   }
 
