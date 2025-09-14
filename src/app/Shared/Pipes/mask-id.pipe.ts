@@ -49,3 +49,4 @@ export class MaskCoordinatesPipe implements PipeTransform {
     return this.privacyService.maskCoordinates(coordinates.latitude, coordinates.longitude);
   }
 }
+

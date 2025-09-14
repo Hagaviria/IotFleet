@@ -17,7 +17,10 @@ import { FormFieldBase } from '../../../../Shared/Models/forms/form-field-base';
 
 import { VehicleService, Vehicle } from '../../Services/vehicle.service';
 import { AuthService } from '../../../../Security/Services/auth.service';
-import { SimulationControlService, SimulationStatus } from '../../Services/simulation-control.service';
+import {
+  SimulationControlService,
+  SimulationStatus,
+} from '../../Services/simulation-control.service';
 
 export interface SensorDataRequest {
   vehicleId: string;
@@ -46,7 +49,7 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
   simulationStatus = signal<SimulationStatus>({
     isRunning: false,
     vehicleCount: 0,
-    lastUpdate: new Date()
+    lastUpdate: new Date(),
   });
 
   sensorDataFields: FormFieldBase<string>[] = [];
@@ -68,10 +71,9 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
   }
 
   private setupSubscriptions(): void {
-    // Suscribirse al estado de la simulación
     this.simulationControlService.simulationStatus$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(status => {
+      .subscribe((status) => {
         this.simulationStatus.set(status);
       });
   }
@@ -83,37 +85,110 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
 
   private initializeFormFields(): void {
     this.sensorDataFields = [
-      new FormFieldBase({ key: 'vehicleId', label: 'Vehículo', required: true, controlType: 'dropdown', order: 1 }),
-      new FormFieldBase({ key: 'latitude', label: 'Latitud', required: true, controlType: 'textbox', type: 'number', value: '4.6097100', order: 2 }),
-      new FormFieldBase({ key: 'longitude', label: 'Longitud', required: true, controlType: 'textbox', type: 'number', value: '-74.0817500', order: 3 }),
-      new FormFieldBase({ key: 'altitude', label: 'Altitud (m)', required: true, controlType: 'textbox', type: 'number', value: '2600.0', order: 4 }),
-      new FormFieldBase({ key: 'speed', label: 'Velocidad (km/h)', required: true, controlType: 'textbox', type: 'number', value: '0', order: 5 }),
-      new FormFieldBase({ key: 'fuelLevel', label: 'Nivel de Combustible (%)', required: true, controlType: 'textbox', type: 'number', value: '100', order: 6 }),
-      new FormFieldBase({ key: 'fuelConsumption', label: 'Consumo de Combustible (L/100km)', required: true, controlType: 'textbox', type: 'number', value: '8.5', order: 7 }),
-      new FormFieldBase({ key: 'engineTemperature', label: 'Temperatura del Motor (°C)', required: true, controlType: 'textbox', type: 'number', value: '85', order: 8 }),
-      new FormFieldBase({ key: 'ambientTemperature', label: 'Temperatura Ambiente (°C)', required: true, controlType: 'textbox', type: 'number', value: '22', order: 9 })
+      new FormFieldBase({
+        key: 'vehicleId',
+        label: 'Vehículo',
+        required: true,
+        controlType: 'dropdown',
+        order: 1,
+      }),
+      new FormFieldBase({
+        key: 'latitude',
+        label: 'Latitud',
+        required: true,
+        controlType: 'textbox',
+        type: 'number',
+        value: '4.6097100',
+        order: 2,
+      }),
+      new FormFieldBase({
+        key: 'longitude',
+        label: 'Longitud',
+        required: true,
+        controlType: 'textbox',
+        type: 'number',
+        value: '-74.0817500',
+        order: 3,
+      }),
+      new FormFieldBase({
+        key: 'altitude',
+        label: 'Altitud (m)',
+        required: true,
+        controlType: 'textbox',
+        type: 'number',
+        value: '2600.0',
+        order: 4,
+      }),
+      new FormFieldBase({
+        key: 'speed',
+        label: 'Velocidad (km/h)',
+        required: true,
+        controlType: 'textbox',
+        type: 'number',
+        value: '0',
+        order: 5,
+      }),
+      new FormFieldBase({
+        key: 'fuelLevel',
+        label: 'Nivel de Combustible (%)',
+        required: true,
+        controlType: 'textbox',
+        type: 'number',
+        value: '100',
+        order: 6,
+      }),
+      new FormFieldBase({
+        key: 'fuelConsumption',
+        label: 'Consumo de Combustible (L/100km)',
+        required: true,
+        controlType: 'textbox',
+        type: 'number',
+        value: '8.5',
+        order: 7,
+      }),
+      new FormFieldBase({
+        key: 'engineTemperature',
+        label: 'Temperatura del Motor (°C)',
+        required: true,
+        controlType: 'textbox',
+        type: 'number',
+        value: '85',
+        order: 8,
+      }),
+      new FormFieldBase({
+        key: 'ambientTemperature',
+        label: 'Temperatura Ambiente (°C)',
+        required: true,
+        controlType: 'textbox',
+        type: 'number',
+        value: '22',
+        order: 9,
+      }),
     ];
   }
 
   loadVehicles(): void {
-    this.vehicleService.getVehicles()
+    this.vehicleService
+      .getVehicles()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (vehicles) => {
           this.vehicles.set(vehicles);
           this.updateVehicleOptions();
         },
-        error: (error) => console.error('Error loading vehicles:', error)
+        error: (error) => console.error('Error loading vehicles:', error),
       });
   }
 
   private updateVehicleOptions(): void {
-    const vehicleOptions = this.vehicles().map(v => ({
+    const vehicleOptions = this.vehicles().map((v) => ({
       key: v.id,
-      value: `${v.plate} - ${v.brand} ${v.model}`
+      value: `${v.plate} - ${v.brand} ${v.model}`,
     }));
-    
-    const vehicleField = this.sensorDataFields.find(field => field.key === 'vehicleId');
+
+    const vehicleField = this.sensorDataFields.find(
+      (field) => field.key === 'vehicleId'
+    );
     if (vehicleField) {
       vehicleField.options = vehicleOptions;
     }
@@ -134,7 +209,7 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
       fuelLevel: parseFloat(formData['fuelLevel']),
       fuelConsumption: parseFloat(formData['fuelConsumption']),
       engineTemperature: parseFloat(formData['engineTemperature']),
-      ambientTemperature: parseFloat(formData['ambientTemperature'])
+      ambientTemperature: parseFloat(formData['ambientTemperature']),
     };
 
     this.sendSensorDataToBackend(sensorData).subscribe({
@@ -142,7 +217,7 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
-          detail: 'Datos de sensor enviados correctamente'
+          detail: 'Datos de sensor enviados correctamente',
         });
         this.showCreateDialog.set(false);
         this.isLoading.set(false);
@@ -152,30 +227,27 @@ export class SensorDataManagementComponent implements OnInit, OnDestroy {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudieron enviar los datos del sensor'
+          detail: 'No se pudieron enviar los datos del sensor',
         });
         this.isLoading.set(false);
-      }
+      },
     });
   }
 
   private sendSensorDataToBackend(sensorData: SensorDataRequest) {
     const API_BASE_URL = 'https://localhost:7162/api';
-    
+
     return this.http.post<any>(`${API_BASE_URL}/SensorData`, sensorData, {
-      headers: this.authService.getAuthHeaders()
+      headers: this.authService.getAuthHeaders(),
     });
   }
-
-
 
   cancelCreate(): void {
     this.showCreateDialog.set(false);
   }
 
-
   getVehicleName(vehicleId: string): string {
-    const vehicle = this.vehicles().find(v => v.id === vehicleId);
+    const vehicle = this.vehicles().find((v) => v.id === vehicleId);
     return vehicle ? vehicle.name : 'Vehículo no encontrado';
   }
 }

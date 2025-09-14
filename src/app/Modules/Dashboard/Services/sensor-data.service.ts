@@ -1,6 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, interval, switchMap, catchError, of, throwError } from 'rxjs';
+import {
+  Observable,
+  BehaviorSubject,
+  interval,
+  switchMap,
+  catchError,
+  of,
+  throwError,
+} from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { AuthService } from '../../../Security/Services/auth.service';
 
@@ -31,12 +39,11 @@ export interface FuelPrediction {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SensorDataService {
   private readonly API_BASE_URL = 'https://localhost:7162/api';
-  private readonly REFRESH_INTERVAL = 15000; // 15 segundos para datos de sensores
-
+  private readonly REFRESH_INTERVAL = 15000;
   private sensorDataSubject = new BehaviorSubject<SensorData[]>([]);
   private fuelPredictionsSubject = new BehaviorSubject<FuelPrediction[]>([]);
 
@@ -51,108 +58,125 @@ export class SensorDataService {
   }
 
   private startRealTimeUpdates(): void {
-    interval(this.REFRESH_INTERVAL).pipe(
-      switchMap(() => this.getRecentSensorData()),
-      catchError(error => {
-        console.error('Error updating sensor data:', error);
-        return of([]);
-      })
-    ).subscribe(data => {
-      this.sensorDataSubject.next(data);
-      this.updateFuelPredictions(data);
-    });
+    interval(this.REFRESH_INTERVAL)
+      .pipe(
+        switchMap(() => this.getRecentSensorData()),
+        catchError((error) => {
+          console.error('Error updating sensor data:', error);
+          return of([]);
+        })
+      )
+      .subscribe((data) => {
+        this.sensorDataSubject.next(data);
+        this.updateFuelPredictions(data);
+      });
   }
 
   getSensorData(): Observable<SensorData[]> {
-    return this.http.get<SensorData[]>(`${this.API_BASE_URL}/SensorData`, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      tap(data => this.cacheSensorData(data)),
-      catchError(error => {
-        console.error('Error fetching sensor data:', error);
-        const cachedData = this.getCachedSensorData();
-        return cachedData.length > 0 ? of(cachedData) : throwError(error);
+    return this.http
+      .get<SensorData[]>(`${this.API_BASE_URL}/SensorData`, {
+        headers: this.authService.getAuthHeaders(),
       })
-    );
+      .pipe(
+        tap((data) => this.cacheSensorData(data)),
+        catchError((error) => {
+          console.error('Error fetching sensor data:', error);
+          const cachedData = this.getCachedSensorData();
+          return cachedData.length > 0 ? of(cachedData) : throwError(error);
+        })
+      );
   }
 
   getRecentSensorData(): Observable<SensorData[]> {
-    return this.http.get<any>(`${this.API_BASE_URL}/SensorData`, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      map(response => {
-        if (response && response.success && response.data) {
-          return response.data.map((item: any) => this.mapApiDataToSensorData(item));
-        }
-        return [];
-      }),
-      catchError(error => {
-        console.error('Error fetching recent sensor data:', error);
-        return of([]);
+    return this.http
+      .get<any>(`${this.API_BASE_URL}/SensorData`, {
+        headers: this.authService.getAuthHeaders(),
       })
-    );
+      .pipe(
+        map((response) => {
+          if (response && response.success && response.data) {
+            return response.data.map((item: any) =>
+              this.mapApiDataToSensorData(item)
+            );
+          }
+          return [];
+        }),
+        catchError((error) => {
+          console.error('Error fetching recent sensor data:', error);
+          return of([]);
+        })
+      );
   }
 
   getSensorDataById(id: string): Observable<SensorData> {
-    return this.http.get<SensorData>(`${this.API_BASE_URL}/SensorData/${id}`, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      map(data => this.mapApiDataToSensorData(data))
-    );
+    return this.http
+      .get<SensorData>(`${this.API_BASE_URL}/SensorData/${id}`, {
+        headers: this.authService.getAuthHeaders(),
+      })
+      .pipe(map((data) => this.mapApiDataToSensorData(data)));
   }
 
   createSensorData(sensorData: Partial<SensorData>): Observable<SensorData> {
-    return this.http.post<SensorData>(`${this.API_BASE_URL}/SensorData`, sensorData, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      map(data => this.mapApiDataToSensorData(data))
-    );
+    return this.http
+      .post<SensorData>(`${this.API_BASE_URL}/SensorData`, sensorData, {
+        headers: this.authService.getAuthHeaders(),
+      })
+      .pipe(map((data) => this.mapApiDataToSensorData(data)));
   }
 
-  updateSensorData(id: string, sensorData: Partial<SensorData>): Observable<SensorData> {
-    return this.http.put<SensorData>(`${this.API_BASE_URL}/SensorData/${id}`, sensorData, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      map(data => this.mapApiDataToSensorData(data))
-    );
+  updateSensorData(
+    id: string,
+    sensorData: Partial<SensorData>
+  ): Observable<SensorData> {
+    return this.http
+      .put<SensorData>(`${this.API_BASE_URL}/SensorData/${id}`, sensorData, {
+        headers: this.authService.getAuthHeaders(),
+      })
+      .pipe(map((data) => this.mapApiDataToSensorData(data)));
   }
 
   deleteSensorData(id: string): Observable<any> {
     return this.http.delete(`${this.API_BASE_URL}/SensorData/${id}`, {
-      headers: this.authService.getAuthHeaders()
+      headers: this.authService.getAuthHeaders(),
     });
   }
 
   private updateFuelPredictions(sensorData: SensorData[]): void {
     const predictions: FuelPrediction[] = [];
-    
+
     const vehicleData = this.groupByVehicle(sensorData);
-    
-    Object.keys(vehicleData).forEach(vehicleId => {
+
+    Object.keys(vehicleData).forEach((vehicleId) => {
       const vehicleSensorData = vehicleData[vehicleId];
       const latestData = vehicleSensorData[vehicleSensorData.length - 1];
-      
+
       if (latestData.fuelLevel !== undefined) {
-        const prediction = this.calculateFuelPrediction(vehicleId, vehicleSensorData);
+        const prediction = this.calculateFuelPrediction(
+          vehicleId,
+          vehicleSensorData
+        );
         predictions.push(prediction);
       }
     });
-    
+
     this.fuelPredictionsSubject.next(predictions);
     this.cacheFuelPredictions(predictions);
   }
 
-  private calculateFuelPrediction(vehicleId: string, sensorData: SensorData[]): FuelPrediction {
+  private calculateFuelPrediction(
+    vehicleId: string,
+    sensorData: SensorData[]
+  ): FuelPrediction {
     const latestData = sensorData[sensorData.length - 1];
     const currentFuelLevel = latestData.fuelLevel || 0;
-    
+
     const consumptionRate = this.calculateFuelConsumptionRate(sensorData);
-    
+
     const estimatedAutonomyHours = currentFuelLevel / consumptionRate;
-    
+
     let alertLevel: 'normal' | 'warning' | 'critical' = 'normal';
     let isLowFuel = false;
-    
+
     if (estimatedAutonomyHours < 1) {
       alertLevel = 'critical';
       isLowFuel = true;
@@ -160,30 +184,36 @@ export class SensorDataService {
       alertLevel = 'warning';
       isLowFuel = true;
     }
-    
+
     return {
       vehicleId,
       currentFuelLevel,
       estimatedAutonomyHours,
       isLowFuel,
       alertLevel,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 
   private calculateFuelConsumptionRate(sensorData: SensorData[]): number {
-    if (sensorData.length < 2) return 0.1; // Valor por defecto
-    
-    const fuelData = sensorData.filter(data => data.fuelLevel !== undefined);
+    if (sensorData.length < 2) return 0.1;
+
+    const fuelData = sensorData.filter((data) => data.fuelLevel !== undefined);
     if (fuelData.length < 2) return 0.1;
-    
-    const timeDiff = (fuelData[fuelData.length - 1].timestamp.getTime() - fuelData[0].timestamp.getTime()) / (1000 * 60 * 60); // horas
-    const fuelDiff = fuelData[0].fuelLevel! - fuelData[fuelData.length - 1].fuelLevel!;
-    
-    return timeDiff > 0 ? Math.max(fuelDiff / timeDiff, 0.01) : 0.1; // Mínimo 0.01 L/h
+
+    const timeDiff =
+      (fuelData[fuelData.length - 1].timestamp.getTime() -
+        fuelData[0].timestamp.getTime()) /
+      (1000 * 60 * 60);
+    const fuelDiff =
+      fuelData[0].fuelLevel! - fuelData[fuelData.length - 1].fuelLevel!;
+
+    return timeDiff > 0 ? Math.max(fuelDiff / timeDiff, 0.01) : 0.1;
   }
 
-  private groupByVehicle(sensorData: SensorData[]): { [vehicleId: string]: SensorData[] } {
+  private groupByVehicle(sensorData: SensorData[]): {
+    [vehicleId: string]: SensorData[];
+  } {
     return sensorData.reduce((acc, data) => {
       if (!acc[data.vehicleId]) {
         acc[data.vehicleId] = [];
@@ -201,28 +231,30 @@ export class SensorDataService {
       latitude: apiData.Latitude,
       longitude: apiData.Longitude,
       speed: apiData.Speed,
-      heading: 0, // No disponible en la respuesta
-      accuracy: 0, // No disponible en la respuesta
+      heading: 0,
+      accuracy: 0,
       fuelLevel: apiData.FuelLevel,
       temperature: apiData.EngineTemperature,
-      engineRpm: 0, // No disponible en la respuesta
-      batteryVoltage: 0, // No disponible en la respuesta
-      odometer: 0, // No disponible en la respuesta
+      engineRpm: 0,
+      batteryVoltage: 0,
+      odometer: 0,
       additionalData: {
         altitude: apiData.Altitude,
         fuelConsumption: apiData.FuelConsumption,
         ambientTemperature: apiData.AmbientTemperature,
-        vehicleInfo: apiData.Vehicle ? {
-          licensePlate: apiData.Vehicle.LicensePlate,
-          model: apiData.Vehicle.Model,
-          brand: apiData.Vehicle.Brand,
-          fuelCapacity: apiData.Vehicle.FuelCapacity,
-          averageConsumption: apiData.Vehicle.AverageConsumption,
-          fleetId: apiData.Vehicle.FleetId,
-          createdAt: new Date(apiData.Vehicle.CreatedAt),
-          lastMaintenance: new Date(apiData.Vehicle.LastMaintenance)
-        } : null
-      }
+        vehicleInfo: apiData.Vehicle
+          ? {
+              licensePlate: apiData.Vehicle.LicensePlate,
+              model: apiData.Vehicle.Model,
+              brand: apiData.Vehicle.Brand,
+              fuelCapacity: apiData.Vehicle.FuelCapacity,
+              averageConsumption: apiData.Vehicle.AverageConsumption,
+              fleetId: apiData.Vehicle.FleetId,
+              createdAt: new Date(apiData.Vehicle.CreatedAt),
+              lastMaintenance: new Date(apiData.Vehicle.LastMaintenance),
+            }
+          : null,
+      },
     };
   }
 
@@ -250,6 +282,8 @@ export class SensorDataService {
   }
 
   getFuelAlerts(): FuelPrediction[] {
-    return this.fuelPredictionsSubject.value.filter(prediction => prediction.isLowFuel);
+    return this.fuelPredictionsSubject.value.filter(
+      (prediction) => prediction.isLowFuel
+    );
   }
 }

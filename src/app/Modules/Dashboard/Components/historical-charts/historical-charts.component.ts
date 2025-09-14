@@ -1,30 +1,32 @@
-import { Component, OnInit, OnDestroy, Input, signal, computed, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  Input,
+  signal,
+  computed,
+  effect,
+} from '@angular/core';
+
 import { Subject, takeUntil } from 'rxjs';
 
-// PrimeNG
-import { CardModule } from 'primeng/card';
-import { ChartModule } from 'primeng/chart';
-import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
-import { ButtonModule } from 'primeng/button';
-import { TabViewModule } from 'primeng/tabview';
 import { MessageService } from 'primeng/api';
 
-// Services
 import { DashboardService } from '../../Services/dashboard.service';
 import { OfflineService } from '../../Services/offline.service';
 
-// Models
-import { Vehicle, HistoricalData, ChartData } from '../../Models/dashboard.models';
+import {
+  Vehicle,
+  HistoricalData,
+  ChartData,
+} from '../../Models/dashboard.models';
 
 @Component({
   selector: 'app-historical-charts',
   standalone: false,
   templateUrl: './historical-charts.component.html',
   styleUrls: ['./historical-charts.component.css'],
-  providers: [MessageService]
+  providers: [MessageService],
 })
 export class HistoricalChartsComponent implements OnInit, OnDestroy {
   @Input() vehicles = signal<Vehicle[]>([]);
@@ -32,22 +34,19 @@ export class HistoricalChartsComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  // Signals
   selectedVehicle = signal<Vehicle | null>(null);
   dateRange = signal<{ start: Date | null; end: Date | null }>({
-    start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 días atrás
-    end: new Date()
+    start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    end: new Date(),
   });
   isLoading = signal<boolean>(false);
   historicalData = signal<HistoricalData[]>([]);
 
-  // Chart data
   speedChartData = signal<ChartData | null>(null);
   fuelChartData = signal<ChartData | null>(null);
   distanceChartData = signal<ChartData | null>(null);
   efficiencyChartData = signal<ChartData | null>(null);
 
-  // Chart options
   chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -56,8 +55,8 @@ export class HistoricalChartsComponent implements OnInit, OnDestroy {
         position: 'top' as const,
         labels: {
           usePointStyle: true,
-          padding: 20
-        }
+          padding: 20,
+        },
       },
       tooltip: {
         mode: 'index' as const,
@@ -66,37 +65,36 @@ export class HistoricalChartsComponent implements OnInit, OnDestroy {
         titleColor: 'white',
         bodyColor: 'white',
         borderColor: 'rgba(255, 255, 255, 0.1)',
-        borderWidth: 1
-      }
+        borderWidth: 1,
+      },
     },
     scales: {
       x: {
         display: true,
         title: {
           display: true,
-          text: 'Fecha'
+          text: 'Fecha',
         },
         grid: {
-          color: 'rgba(0, 0, 0, 0.1)'
-        }
+          color: 'rgba(0, 0, 0, 0.1)',
+        },
       },
       y: {
         display: true,
         grid: {
-          color: 'rgba(0, 0, 0, 0.1)'
-        }
-      }
+          color: 'rgba(0, 0, 0, 0.1)',
+        },
+      },
     },
     interaction: {
       mode: 'nearest' as const,
       axis: 'x' as const,
-      intersect: false
-    }
+      intersect: false,
+    },
   };
 
-  // Computed
   filteredVehicles = computed(() => {
-    return this.vehicles().filter(v => v.status === 'active');
+    return this.vehicles().filter((v) => v.status === 'active');
   });
 
   constructor(
@@ -115,14 +113,12 @@ export class HistoricalChartsComponent implements OnInit, OnDestroy {
   }
 
   private initializeCharts(): void {
-    // Configurar fechas por defecto
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 7);
-    
+
     this.dateRange.set({ start: startDate, end: endDate });
-    
-    // Seleccionar el primer vehículo activo por defecto
+
     const activeVehicles = this.filteredVehicles();
     if (activeVehicles.length > 0) {
       this.selectedVehicle.set(activeVehicles[0]);
@@ -145,7 +141,7 @@ export class HistoricalChartsComponent implements OnInit, OnDestroy {
   private loadHistoricalData(): void {
     const vehicle = this.selectedVehicle();
     const dateRange = this.dateRange();
-    
+
     if (!vehicle || !dateRange.start || !dateRange.end) {
       return;
     }
@@ -153,26 +149,26 @@ export class HistoricalChartsComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
 
     if (this.isOnline()) {
-      this.dashboardService.getHistoricalData(vehicle.id, dateRange.start, dateRange.end).pipe(
-        takeUntil(this.destroy$)
-      ).subscribe({
-        next: (data) => {
-          this.historicalData.set(data);
-          this.updateCharts(data);
-          this.isLoading.set(false);
-        },
-        error: (error) => {
-          console.error('Error loading historical data:', error);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudieron cargar los datos históricos'
-          });
-          this.isLoading.set(false);
-        }
-      });
+      this.dashboardService
+        .getHistoricalData(vehicle.id, dateRange.start, dateRange.end)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (data) => {
+            this.historicalData.set(data);
+            this.updateCharts(data);
+            this.isLoading.set(false);
+          },
+          error: (error) => {
+            console.error('Error loading historical data:', error);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'No se pudieron cargar los datos históricos',
+            });
+            this.isLoading.set(false);
+          },
+        });
     } else {
-      // Cargar datos desde caché offline
       this.loadOfflineHistoricalData(vehicle.id);
     }
   }
@@ -183,11 +179,11 @@ export class HistoricalChartsComponent implements OnInit, OnDestroy {
       this.historicalData.set(data);
       this.updateCharts(data);
       this.isLoading.set(false);
-      
+
       this.messageService.add({
         severity: 'warn',
         summary: 'Modo Offline',
-        detail: 'Mostrando datos históricos en caché'
+        detail: 'Mostrando datos históricos en caché',
       });
     } catch (error) {
       console.error('Error loading offline data:', error);
@@ -201,141 +197,157 @@ export class HistoricalChartsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Ordenar datos por fecha
-    const sortedData = data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
-    // Preparar labels (fechas) con formato más legible
-    const labels = sortedData.map(d => {
+    const sortedData = data.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    const labels = sortedData.map((d) => {
       const date = new Date(d.date);
-      return date.toLocaleDateString('es-ES', { 
-        month: 'short', 
+      return date.toLocaleDateString('es-ES', {
+        month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       });
     });
-    
-    // Calcular distancia acumulada
+
     const distanceData = this.calculateDistanceData(sortedData);
-    
-    // Gráfico de velocidad con estadísticas
+
     this.speedChartData.set({
       labels: labels,
-      datasets: [{
-        label: 'Velocidad (km/h)',
-        data: sortedData.map(d => d.speed),
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        fill: true,
-      }, {
-        label: 'Velocidad Promedio',
-        data: new Array(sortedData.length).fill(this.getAverageSpeed()),
-        borderColor: '#1e40af',
-        backgroundColor: 'transparent',
-        fill: false
-      }]
+      datasets: [
+        {
+          label: 'Velocidad (km/h)',
+          data: sortedData.map((d) => d.speed),
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          fill: true,
+        },
+        {
+          label: 'Velocidad Promedio',
+          data: new Array(sortedData.length).fill(this.getAverageSpeed()),
+          borderColor: '#1e40af',
+          backgroundColor: 'transparent',
+          fill: false,
+        },
+      ],
     });
 
-    // Gráfico de combustible con alertas
     this.fuelChartData.set({
       labels: labels,
-      datasets: [{
-        label: 'Nivel de Combustible (%)',
-        data: sortedData.map(d => d.fuelLevel),
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        fill: true,
-      }, {
-        label: 'Alerta Bajo Combustible (20%)',
-        data: new Array(sortedData.length).fill(20),
-        borderColor: '#ef4444',
-        backgroundColor: 'transparent',
-        fill: false
-      }, {
-        label: 'Alerta Crítico (5%)',
-        data: new Array(sortedData.length).fill(5),
-        borderColor: '#dc2626',
-        backgroundColor: 'transparent',
-        fill: false
-      }]
+      datasets: [
+        {
+          label: 'Nivel de Combustible (%)',
+          data: sortedData.map((d) => d.fuelLevel),
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          fill: true,
+        },
+        {
+          label: 'Alerta Bajo Combustible (20%)',
+          data: new Array(sortedData.length).fill(20),
+          borderColor: '#ef4444',
+          backgroundColor: 'transparent',
+          fill: false,
+        },
+        {
+          label: 'Alerta Crítico (5%)',
+          data: new Array(sortedData.length).fill(5),
+          borderColor: '#dc2626',
+          backgroundColor: 'transparent',
+          fill: false,
+        },
+      ],
     });
 
-    // Gráfico de distancia acumulada
     this.distanceChartData.set({
       labels: labels,
-      datasets: [{
-        label: 'Distancia Acumulada (km)',
-        data: distanceData,
-        borderColor: '#f59e0b',
-        backgroundColor: 'rgba(245, 158, 11, 0.1)',
-        fill: true,
-      }]
+      datasets: [
+        {
+          label: 'Distancia Acumulada (km)',
+          data: distanceData,
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          fill: true,
+        },
+      ],
     });
 
-    // Gráfico de eficiencia (calculado)
     const efficiencyData = this.calculateEfficiencyData(sortedData);
     this.efficiencyChartData.set({
       labels: labels,
-      datasets: [{
-        label: 'Eficiencia (km/L)',
-        data: efficiencyData,
-        borderColor: '#8b5cf6',
-        backgroundColor: 'rgba(139, 92, 246, 0.1)',
-        fill: true,
-      }]
+      datasets: [
+        {
+          label: 'Eficiencia (km/L)',
+          data: efficiencyData,
+          borderColor: '#8b5cf6',
+          backgroundColor: 'rgba(139, 92, 246, 0.1)',
+          fill: true,
+        },
+      ],
     });
   }
 
   private calculateDistanceData(data: HistoricalData[]): number[] {
-    // Calcular distancia acumulada basada en coordenadas GPS
     let totalDistance = 0;
     return data.map((d, index) => {
       if (index === 0) return 0;
-      
+
       const prevData = data[index - 1];
       const distance = this.calculateDistanceBetweenPoints(
-        prevData.latitude || 0, prevData.longitude || 0,
-        d.latitude || 0, d.longitude || 0
+        prevData.latitude || 0,
+        prevData.longitude || 0,
+        d.latitude || 0,
+        d.longitude || 0
       );
-      
+
       totalDistance += distance;
-      return Math.round(totalDistance * 100) / 100; // Redondear a 2 decimales
+      return Math.round(totalDistance * 100) / 100;
     });
   }
 
-  private calculateDistanceBetweenPoints(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371; // Radio de la Tierra en km
+  private calculateDistanceBetweenPoints(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number {
+    const R = 6371;
     const dLat = this.deg2rad(lat2 - lat1);
     const dLon = this.deg2rad(lon2 - lon1);
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.deg2rad(lat1)) *
+        Math.cos(this.deg2rad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   }
 
   private deg2rad(deg: number): number {
-    return deg * (Math.PI/180);
+    return deg * (Math.PI / 180);
   }
 
   private calculateEfficiencyData(data: HistoricalData[]): number[] {
-    // Calcular eficiencia basada en distancia y combustible
     return data.map((d, index) => {
       if (index === 0) return 0;
-      
+
       const prevData = data[index - 1];
       const distanceDiff = this.calculateDistanceBetweenPoints(
-        prevData.latitude || 0, prevData.longitude || 0,
-        d.latitude || 0, d.longitude || 0
+        prevData.latitude || 0,
+        prevData.longitude || 0,
+        d.latitude || 0,
+        d.longitude || 0
       );
       const fuelDiff = prevData.fuelLevel - d.fuelLevel;
-      
+
       if (fuelDiff <= 0 || distanceDiff <= 0) return 0;
-      
-      // Asumiendo un tanque de 50L
+
       const fuelConsumed = (fuelDiff / 100) * 50;
-      return fuelConsumed > 0 ? Math.round((distanceDiff / fuelConsumed) * 100) / 100 : 0;
+      return fuelConsumed > 0
+        ? Math.round((distanceDiff / fuelConsumed) * 100) / 100
+        : 0;
     });
   }
 
@@ -352,39 +364,47 @@ export class HistoricalChartsComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'warn',
         summary: 'Advertencia',
-        detail: 'No hay datos para exportar'
+        detail: 'No hay datos para exportar',
       });
       return;
     }
 
-    // Convertir a CSV
     const csvContent = this.convertToCSV(data);
-    this.downloadCSV(csvContent, `datos_historicos_${this.selectedVehicle()?.name || 'vehiculo'}.csv`);
-    
+    this.downloadCSV(
+      csvContent,
+      `datos_historicos_${this.selectedVehicle()?.name || 'vehiculo'}.csv`
+    );
+
     this.messageService.add({
       severity: 'success',
       summary: 'Éxito',
-      detail: 'Datos exportados correctamente'
+      detail: 'Datos exportados correctamente',
     });
   }
 
   private convertToCSV(data: HistoricalData[]): string {
-    const headers = ['Fecha', 'Velocidad (km/h)', 'Combustible (%)', 'Distancia (km)', 'Vehículo'];
-    const rows = data.map(d => [
+    const headers = [
+      'Fecha',
+      'Velocidad (km/h)',
+      'Combustible (%)',
+      'Distancia (km)',
+      'Vehículo',
+    ];
+    const rows = data.map((d) => [
       new Date(d.date).toLocaleString(),
       d.speed.toString(),
       d.fuelLevel.toString(),
       d.distance.toString(),
-      d.vehicleId
+      d.vehicleId,
     ]);
 
-    return [headers, ...rows].map(row => row.join(',')).join('\n');
+    return [headers, ...rows].map((row) => row.join(',')).join('\n');
   }
 
   private downloadCSV(content: string, filename: string): void {
     const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    
+
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
@@ -400,7 +420,6 @@ export class HistoricalChartsComponent implements OnInit, OnDestroy {
     this.loadHistoricalData();
   }
 
-  // Métodos para obtener estadísticas
   getAverageSpeed(): number {
     const data = this.historicalData();
     if (data.length === 0) return 0;
@@ -416,7 +435,7 @@ export class HistoricalChartsComponent implements OnInit, OnDestroy {
   getTotalDistance(): number {
     const data = this.historicalData();
     if (data.length < 2) return 0;
-    
+
     const distanceData = this.calculateDistanceData(data);
     return distanceData[distanceData.length - 1] || 0;
   }
@@ -424,11 +443,13 @@ export class HistoricalChartsComponent implements OnInit, OnDestroy {
   getAverageEfficiency(): number {
     const data = this.historicalData();
     if (data.length < 2) return 0;
-    
+
     const efficiencyData = this.calculateEfficiencyData(data);
-    const validEfficiency = efficiencyData.filter(e => e > 0);
-    
+    const validEfficiency = efficiencyData.filter((e) => e > 0);
+
     if (validEfficiency.length === 0) return 0;
-    return validEfficiency.reduce((sum, e) => sum + e, 0) / validEfficiency.length;
+    return (
+      validEfficiency.reduce((sum, e) => sum + e, 0) / validEfficiency.length
+    );
   }
 }

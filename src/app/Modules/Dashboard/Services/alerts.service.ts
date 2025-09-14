@@ -70,17 +70,47 @@ export class AlertsService {
   private generateSimulatedAlerts(sensorData: any[]): Alert[] {
     const alerts: Alert[] = [];
     
-    sensorData.forEach(data => {
-      const vehiclePlate = data.additionalData?.vehicleInfo?.licensePlate || data.vehicleId;
-      const vehicleInfo = data.additionalData?.vehicleInfo;
+    // Generar alertas de prueba si no hay datos de sensores
+    if (!sensorData || sensorData.length === 0) {
+      alerts.push({
+        id: `test_fuel_${Date.now()}`,
+        type: 'fuel',
+        severity: 'medium',
+        title: 'Alerta de Combustible',
+        message: 'Vehículo ABC-123 tiene nivel de combustible bajo: 15%',
+        vehicleId: 'test-vehicle-1',
+        timestamp: new Date(),
+        isRead: false,
+        isPredictive: true
+      });
       
-      if (data.fuelLevel && data.fuelLevel < 20) {
+      alerts.push({
+        id: `test_temp_${Date.now()}`,
+        type: 'temperature',
+        severity: 'high',
+        title: 'Temperatura del Motor Alta',
+        message: 'Vehículo XYZ-789 tiene temperatura alta: 95°C',
+        vehicleId: 'test-vehicle-2',
+        timestamp: new Date(),
+        isRead: false,
+        isPredictive: false
+      });
+      
+      return alerts;
+    }
+    
+    sensorData.forEach(data => {
+      const vehiclePlate = data.additionalData?.vehicleInfo?.licensePlate || data.vehicleId || 'Desconocido';
+      const vehicleInfo = data.additionalData?.vehicleInfo;
+      const fuelLevel = data.fuelLevel || 0;
+      
+      if (fuelLevel > 0 && fuelLevel < 20) {
         alerts.push({
           id: `fuel_${data.vehicleId}_${Date.now()}`,
           type: 'fuel',
-          severity: data.fuelLevel < 10 ? 'high' : 'medium',
+          severity: fuelLevel < 10 ? 'high' : 'medium',
           title: 'Nivel de Combustible Bajo',
-          message: `Vehículo ${vehiclePlate} tiene ${data.fuelLevel}% de combustible (Capacidad: ${vehicleInfo?.fuelCapacity || 'N/A'}L)`,
+          message: `Vehículo ${vehiclePlate} tiene ${fuelLevel}% de combustible (Capacidad: ${vehicleInfo?.fuelCapacity || 'N/A'}L)`,
           vehicleId: data.vehicleId,
           timestamp: new Date(),
           isRead: false,
@@ -88,13 +118,14 @@ export class AlertsService {
         });
       }
       
-      if (data.temperature && data.temperature > 80) {
+      const temperature = data.temperature || 0;
+      if (temperature > 80) {
         alerts.push({
           id: `temp_${data.vehicleId}_${Date.now()}`,
           type: 'temperature',
-          severity: data.temperature > 90 ? 'high' : 'medium',
+          severity: temperature > 90 ? 'high' : 'medium',
           title: 'Temperatura del Motor Alta',
-          message: `Vehículo ${vehiclePlate} tiene temperatura alta: ${data.temperature}°C (Ambiente: ${data.additionalData?.ambientTemperature || 'N/A'}°C)`,
+          message: `Vehículo ${vehiclePlate} tiene temperatura alta: ${temperature}°C (Ambiente: ${data.additionalData?.ambientTemperature || 'N/A'}°C)`,
           vehicleId: data.vehicleId,
           timestamp: new Date(),
           isRead: false,
@@ -102,13 +133,14 @@ export class AlertsService {
         });
       }
       
-      if (data.speed && data.speed > 100) {
+      const speed = data.speed || 0;
+      if (speed > 100) {
         alerts.push({
           id: `speed_${data.vehicleId}_${Date.now()}`,
           type: 'speed',
-          severity: data.speed > 120 ? 'high' : 'medium',
+          severity: speed > 120 ? 'high' : 'medium',
           title: 'Velocidad Excesiva',
-          message: `Vehículo ${vehiclePlate} circula a ${data.speed} km/h (Consumo: ${data.additionalData?.fuelConsumption || 'N/A'} L/100km)`,
+          message: `Vehículo ${vehiclePlate} circula a ${speed} km/h (Consumo: ${data.additionalData?.fuelConsumption || 'N/A'} L/100km)`,
           vehicleId: data.vehicleId,
           timestamp: new Date(),
           isRead: false,
@@ -156,39 +188,57 @@ export class AlertsService {
   }
 
   getAlertsByVehicle(vehicleId: string): Observable<Alert[]> {
-    return this.http.get<Alert[]>(`${this.API_BASE_URL}/alerts/vehicle/${vehicleId}`);
+    return this.http.get<Alert[]>(`${this.API_BASE_URL}/alerts/vehicle/${vehicleId}`, {
+      headers: this.authService.getAuthHeaders()
+    });
   }
 
   markAlertAsRead(alertId: string): Observable<void> {
-    return this.http.patch<void>(`${this.API_BASE_URL}/alerts/${alertId}/read`, {});
+    return this.http.patch<void>(`${this.API_BASE_URL}/alerts/${alertId}/read`, {}, {
+      headers: this.authService.getAuthHeaders()
+    });
   }
 
   markAllAlertsAsRead(): Observable<void> {
-    return this.http.patch<void>(`${this.API_BASE_URL}/alerts/read-all`, {});
+    return this.http.patch<void>(`${this.API_BASE_URL}/alerts/read-all`, {}, {
+      headers: this.authService.getAuthHeaders()
+    });
   }
 
   deleteAlert(alertId: string): Observable<void> {
-    return this.http.delete<void>(`${this.API_BASE_URL}/alerts/${alertId}`);
+    return this.http.delete<void>(`${this.API_BASE_URL}/alerts/${alertId}`, {
+      headers: this.authService.getAuthHeaders()
+    });
   }
 
   createAlert(alert: Omit<Alert, 'id' | 'timestamp' | 'isRead'>): Observable<Alert> {
-    return this.http.post<Alert>(`${this.API_BASE_URL}/alerts`, alert);
+    return this.http.post<Alert>(`${this.API_BASE_URL}/alerts`, alert, {
+      headers: this.authService.getAuthHeaders()
+    });
   }
 
   generatePredictiveAlerts(): Observable<Alert[]> {
-    return this.http.post<Alert[]>(`${this.API_BASE_URL}/alerts/predictive/generate`, {});
+    return this.http.post<Alert[]>(`${this.API_BASE_URL}/alerts/predictive/generate`, {}, {
+      headers: this.authService.getAuthHeaders()
+    });
   }
 
   getMaintenancePredictions(): Observable<Alert[]> {
-    return this.http.get<Alert[]>(`${this.API_BASE_URL}/alerts/predictive/maintenance`);
+    return this.http.get<Alert[]>(`${this.API_BASE_URL}/alerts/predictive/maintenance`, {
+      headers: this.authService.getAuthHeaders()
+    });
   }
 
   getFuelPredictions(): Observable<Alert[]> {
-    return this.http.get<Alert[]>(`${this.API_BASE_URL}/alerts/predictive/fuel`);
+    return this.http.get<Alert[]>(`${this.API_BASE_URL}/alerts/predictive/fuel`, {
+      headers: this.authService.getAuthHeaders()
+    });
   }
 
   getSpeedViolationPredictions(): Observable<Alert[]> {
-    return this.http.get<Alert[]>(`${this.API_BASE_URL}/alerts/predictive/speed`);
+    return this.http.get<Alert[]>(`${this.API_BASE_URL}/alerts/predictive/speed`, {
+      headers: this.authService.getAuthHeaders()
+    });
   }
 
   private setupWebSocketAlerts(): void {
@@ -355,20 +405,20 @@ export class AlertsService {
 
   private mapApiAlertToAlert(apiAlert: any): Alert {
     return {
-      id: apiAlert.vehicleId,
-      type: 'fuel',
-      severity: this.mapSeverity(apiAlert.severity),
+      id: `alert_${apiAlert.VehicleId}_${Date.now()}`,
+      type: apiAlert.AlertType || 'fuel',
+      severity: this.mapSeverity(apiAlert.Severity),
       title: 'Alerta de Combustible',
-      message: apiAlert.message || `Vehículo ${apiAlert.licensePlate} tiene nivel de combustible bajo: ${apiAlert.currentFuelLevel}%`,
-      vehicleId: apiAlert.vehicleId,
-      timestamp: new Date(apiAlert.alertTimestamp),
+      message: apiAlert.Message || `Vehículo ${apiAlert.LicensePlate} tiene nivel de combustible bajo: ${apiAlert.FuelLevel}%`,
+      vehicleId: apiAlert.VehicleId,
+      timestamp: new Date(apiAlert.Timestamp),
       isRead: false,
       isPredictive: true,
       additionalData: {
-        licensePlate: apiAlert.licensePlate,
-        currentFuelLevel: apiAlert.currentFuelLevel,
-        estimatedAutonomyHours: apiAlert.estimatedAutonomyHours,
-        remainingDistanceKm: apiAlert.remainingDistanceKm
+        licensePlate: apiAlert.LicensePlate,
+        currentFuelLevel: apiAlert.FuelLevel,
+        estimatedAutonomyHours: apiAlert.EstimatedAutonomyHours,
+        remainingDistanceKm: apiAlert.RemainingDistance
       }
     };
   }

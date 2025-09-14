@@ -7,7 +7,10 @@ import { OfflineService } from '../../Services/offline.service';
 import { AuthService } from '../../../../Security/Services/auth.service';
 import { SensorDataService } from '../../Services/sensor-data.service';
 import { WebSocketService } from '../../Services/websocket.service';
-import { SimulationControlService, SimulationStatus } from '../../Services/simulation-control.service';
+import {
+  SimulationControlService,
+  SimulationStatus,
+} from '../../Services/simulation-control.service';
 import {
   DashboardStats,
   Vehicle,
@@ -23,7 +26,7 @@ import {
   providers: [MessageService, ConfirmationService],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>()
+  private destroy$ = new Subject<void>();
   private realTimeInterval: any = null;
 
   stats = signal<DashboardStats | null>(null);
@@ -39,19 +42,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
   simulationStatus = signal<SimulationStatus>({
     isRunning: false,
     vehicleCount: 0,
-    lastUpdate: new Date()
+    lastUpdate: new Date(),
   });
-  
 
   activeVehiclesCount = computed(
     () => (this.vehicles() || []).filter((v) => v.status === 'active').length
   );
   criticalAlertsCount = computed(
     () =>
-      (this.alerts() || []).filter((a) => a.severity === 'critical' && !a.isRead).length
+      (this.alerts() || []).filter(
+        (a) => a.severity === 'critical' && !a.isRead
+      ).length
   );
   averageSpeed = computed(() => {
-    const activeVehicles = (this.vehicles() || []).filter((v) => v.status === 'active');
+    const activeVehicles = (this.vehicles() || []).filter(
+      (v) => v.status === 'active'
+    );
     if (activeVehicles.length === 0) return 0;
     return (
       activeVehicles.reduce((sum, v) => sum + v.averageSpeed, 0) /
@@ -65,7 +71,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return {
       id: userId,
       role: userRole,
-      isAdmin: userRole === 'Admin'
+      isAdmin: userRole === 'Admin',
+      isOperator: userRole === 'Operator',
     };
   });
 
@@ -86,7 +93,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.setupSubscriptions();
   }
 
-
   private initializeDashboard(): void {
     this.isAdmin.set(this.authService.isAdmin());
     this.offlineService.isOnline$
@@ -103,13 +109,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private setupSubscriptions(): void {
-    // Suscribirse al estado de la simulación
     this.simulationControlService.simulationStatus$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(status => {
+      .subscribe((status) => {
         this.simulationStatus.set(status);
-        
-        // Si la simulación está activa, actualizar datos cada 3 segundos
+
         if (status.isRunning) {
           this.startRealTimeUpdates();
         } else {
@@ -194,8 +198,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.updateVehicleSensorData(update.vehicleId, update.sensorData);
           }
         },
-        error: (error) => {
-        },
+        error: (error) => {},
       });
 
     this.webSocketService
@@ -207,8 +210,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.showAlertNotification(update.alert);
           }
         },
-        error: (error) => {
-        },
+        error: (error) => {},
       });
   }
 
@@ -353,22 +355,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-
   private updateVehicleLocation(vehicleId: string, location: any): void {
     const currentLocations = this.locations();
-    const existingLocationIndex = currentLocations.findIndex(loc => loc.vehicleId === vehicleId);
-    
+    const existingLocationIndex = currentLocations.findIndex(
+      (loc) => loc.vehicleId === vehicleId
+    );
+
     if (existingLocationIndex >= 0) {
-      // Actualizar ubicación existente
       const updatedLocations = [...currentLocations];
-      updatedLocations[existingLocationIndex] = { 
-        ...updatedLocations[existingLocationIndex], 
-        ...location, 
-        timestamp: new Date() 
+      updatedLocations[existingLocationIndex] = {
+        ...updatedLocations[existingLocationIndex],
+        ...location,
+        timestamp: new Date(),
       };
       this.locations.set(updatedLocations);
     } else {
-      // Agregar nueva ubicación
       const newLocation = {
         id: `${vehicleId}-${Date.now()}`,
         vehicleId,
@@ -381,7 +382,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         altitude: location.altitude || 0,
         fuelConsumption: location.fuelConsumption || 0,
         engineTemperature: location.engineTemperature || 0,
-        ambientTemperature: location.ambientTemperature || 0
+        ambientTemperature: location.ambientTemperature || 0,
       };
       this.locations.set([...currentLocations, newLocation]);
     }
@@ -456,7 +457,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         },
       });
 
-    // Actualizar estado de simulación
     this.simulationControlService.updateSimulationStatus();
   }
 
@@ -472,16 +472,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.messageService.add({
           severity: 'info',
           summary: 'Sesión Cerrada',
-          detail: 'Ha cerrado sesión correctamente'
+          detail: 'Ha cerrado sesión correctamente',
         });
         setTimeout(() => {
           window.location.href = '/login';
         }, 1000);
-      }
+      },
     });
   }
 
-  // Métodos para controlar la simulación
   startSimulation(): void {
     this.simulationControlService.startSimulation().subscribe({
       next: (response) => {
@@ -489,7 +488,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.messageService.add({
             severity: 'success',
             summary: 'Simulación Iniciada',
-            detail: 'La simulación de vehículos ha comenzado'
+            detail: 'La simulación de vehículos ha comenzado',
           });
           this.simulationControlService.updateSimulationStatus();
           setTimeout(() => {
@@ -499,7 +498,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'No se pudo iniciar la simulación'
+            detail: 'No se pudo iniciar la simulación',
           });
         }
       },
@@ -507,9 +506,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'Error al iniciar la simulación'
+          detail: 'Error al iniciar la simulación',
         });
-      }
+      },
     });
   }
 
@@ -520,14 +519,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.messageService.add({
             severity: 'info',
             summary: 'Simulación Detenida',
-            detail: 'La simulación de vehículos se ha detenido'
+            detail: 'La simulación de vehículos se ha detenido',
           });
           this.simulationControlService.updateSimulationStatus();
         } else {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'No se pudo detener la simulación'
+            detail: 'No se pudo detener la simulación',
           });
         }
       },
@@ -535,9 +534,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'Error al detener la simulación'
+          detail: 'Error al detener la simulación',
         });
-      }
+      },
     });
   }
 
@@ -545,7 +544,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.realTimeInterval) {
       clearInterval(this.realTimeInterval);
     }
-    
+
     this.realTimeInterval = setInterval(() => {
       this.dashboardService.getRealTimeData().subscribe({
         next: (locations) => {
@@ -553,9 +552,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.locations.set(locations);
           }
         },
-        error: (error) => {
-          // Backend not available
-        }
+        error: (error) => {},
       });
     }, 3000);
   }
@@ -572,5 +569,4 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
     this.stopRealTimeUpdates();
   }
-
 }

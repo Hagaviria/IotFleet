@@ -349,3 +349,4 @@ export class GeofenceService {
     );
   }
 }
+

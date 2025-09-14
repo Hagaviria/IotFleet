@@ -1,7 +1,7 @@
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { delay, tap, catchError, map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 @Injectable({
   providedIn: 'root',
@@ -48,18 +48,18 @@ export class AuthService {
 
   login(email: string, password: string): Observable<boolean> {
     const loginData = { Email: email, Password: password };
-    
+
     return this.http.post<any>(`${this.API_BASE_URL}/Login`, loginData).pipe(
       map((response) => {
-        if (response && response.success && response.data) {
+        if (response?.success && response?.data) {
           const data = response.data;
-          
+
           const token = data.Token;
           const role = data.NombrePerfil || 'user';
           const userId = data.Identificacion || '';
           const email = data.Correo || '';
           const name = data.Nombre || '';
-          
+
           if (token) {
             if (isPlatformBrowser(this.platformId)) {
               try {
@@ -68,23 +68,18 @@ export class AuthService {
                 window.localStorage.setItem(this.USER_ID_KEY, userId);
                 window.localStorage.setItem('user_email', email);
                 window.localStorage.setItem('user_name', name);
-              } catch (error) {
-                console.error('Error guardando en localStorage:', error);
-              }
+              } catch {}
             }
-            
+
             this.isLoggedIn.next(true);
             this.userRole.next(role);
             return true;
           }
         }
-        
+
         return false;
       }),
-      catchError((error) => {
-        console.error('Error completo en login:', error);
-        return of(false);
-      })
+      catchError(() => of(false))
     );
   }
 
@@ -114,8 +109,8 @@ export class AuthService {
   getAuthHeaders(): HttpHeaders {
     const token = this.getToken();
     return new HttpHeaders({
-      'Authorization': token ? `Bearer ${token}` : '',
-      'Content-Type': 'application/json'
+      Authorization: token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json',
     });
   }
 
@@ -125,6 +120,15 @@ export class AuthService {
 
   isAdmin(): boolean {
     return this.userRole.value?.toLowerCase() === 'admin';
+  }
+
+  isOperator(): boolean {
+    return this.userRole.value?.toLowerCase() === 'operator';
+  }
+
+  isAdminOrOperator(): boolean {
+    const role = this.userRole.value?.toLowerCase();
+    return role === 'admin' || role === 'operator';
   }
 
   getUserId(): string | null {
@@ -137,5 +141,4 @@ export class AuthService {
     }
     return null;
   }
-
 }

@@ -94,7 +94,6 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
     effect(() => {
       const vehicles = this.vehicles();
       const locations = this.locations();
-      // Solo actualizar marcadores si el mapa está inicializado
       if (this.mapInstance && vehicles.length > 0) {
         this.updateMapMarkers(vehicles, locations);
       }
@@ -108,7 +107,6 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // Esperar a que el DOM esté completamente renderizado
     setTimeout(() => {
       this.loadMapLibreScript();
     }, 500);
@@ -124,12 +122,12 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private loadMapLibreScript(): void {
     const mapContainer = document.getElementById('map-container');
-    
+
     if (!mapContainer) {
       setTimeout(() => this.loadMapLibreScript(), 500);
       return;
     }
-    
+
     if (typeof window !== 'undefined' && (window as any).maplibregl) {
       this.initializeMap();
     } else if (typeof window !== 'undefined') {
@@ -175,12 +173,10 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
       this.setupMapEvents();
 
       this.isLoading.set(false);
-      
-      // Actualizar marcadores después de que el mapa esté inicializado
+
       setTimeout(() => {
         if (this.mapInstance) {
           this.mapInstance.resize();
-          // Forzar actualización de marcadores
           const vehicles = this.vehicles();
           const locations = this.locations();
           if (vehicles.length > 0) {
@@ -202,7 +198,6 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
   private setupMapEvents(): void {
     if (!this.mapInstance) return;
 
-    // Evento de clic en el mapa para crear geofences
     this.mapInstance.on('click', (e: any) => {
       if (this.showGeofenceDialog()) {
         this.newGeofence.center = {
@@ -214,16 +209,11 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private setupSubscriptions(): void {
-    // Las suscripciones ya están configuradas en el constructor con effect()
+    /* intentionally left blank: effects handle subscriptions */
   }
 
   private updateMapMarkers(vehicles: Vehicle[], locations: Location[]): void {
-    if (!this.mapInstance) {
-      console.log('Map instance not ready, skipping marker update');
-      return;
-    }
-
-    console.log('Updating map markers:', { vehicles: vehicles.length, locations: locations.length });
+    if (!this.mapInstance) return;
 
     // Actualizar marcadores existentes o crear nuevos
     vehicles.forEach((vehicle) => {
@@ -231,19 +221,14 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
       if (location) {
         const existingMarker = this.markers.get(vehicle.id);
         if (existingMarker) {
-          // Actualizar marcador existente con animación suave
           this.updateVehicleMarker(vehicle, location, existingMarker);
         } else {
-          // Crear nuevo marcador
           this.addVehicleMarker(vehicle, location);
         }
-      } else {
-        console.log(`No location found for vehicle ${vehicle.id}`);
       }
     });
 
-    // Remover marcadores de vehículos que ya no existen
-    const currentVehicleIds = new Set(vehicles.map(v => v.id));
+    const currentVehicleIds = new Set(vehicles.map((v) => v.id));
     this.markers.forEach((marker, vehicleId) => {
       if (!currentVehicleIds.has(vehicleId)) {
         marker.remove();
@@ -270,7 +255,6 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
         )
         .addTo(this.mapInstance);
 
-      // Agregar clase de animación para nuevo marcador
       const element = marker.getElement();
       if (element) {
         element.classList.add('new-marker');
@@ -285,7 +269,11 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  private updateVehicleMarker(vehicle: Vehicle, location: Location, existingMarker: any): void {
+  private updateVehicleMarker(
+    vehicle: Vehicle,
+    location: Location,
+    existingMarker: any
+  ): void {
     if (!this.mapInstance || !existingMarker) {
       return;
     }
@@ -293,36 +281,30 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
     try {
       const currentLngLat = existingMarker.getLngLat();
       const newLngLat = [location.longitude, location.latitude];
-      
-      // Verificar si la posición ha cambiado significativamente
+
       const distance = this.calculateDistance(
-        currentLngLat.lat, currentLngLat.lng,
-        location.latitude, location.longitude
+        currentLngLat.lat,
+        currentLngLat.lng,
+        location.latitude,
+        location.longitude
       );
 
-      if (distance > 0.0001) { // Solo actualizar si se movió más de ~10 metros (más sensible)
-        // Agregar clase de animación para movimiento
+      if (distance > 0.0001) {
         const element = existingMarker.getElement();
         if (element) {
           element.classList.add('moving');
         }
 
-        // Actualizar posición con animación suave
         existingMarker.setLngLat(newLngLat);
-        
-        // Actualizar popup con nueva información
         existingMarker.setPopup(
           new window.maplibregl.Popup({ offset: 25 }).setHTML(
             this.createVehiclePopup(vehicle, location)
           )
         );
 
-        // Actualizar color si el estado cambió
         const newColor = this.getVehicleColor(vehicle.status);
         if (element) {
           element.style.backgroundColor = newColor;
-          
-          // Remover clase de animación después de completar
           setTimeout(() => {
             element.classList.remove('moving');
           }, 600);
@@ -333,17 +315,22 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number {
     const R = 6371e3; // Radio de la Tierra en metros
-    const φ1 = lat1 * Math.PI / 180;
-    const φ2 = lat2 * Math.PI / 180;
-    const Δφ = (lat2 - lat1) * Math.PI / 180;
-    const Δλ = (lon2 - lon1) * Math.PI / 180;
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
 
-    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ/2) * Math.sin(Δλ/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
     return R * c; // Distancia en metros
   }
@@ -426,7 +413,6 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-
   onVehicleSelect(vehicle: Vehicle | null): void {
     this.selectedVehicle.set(vehicle);
 
@@ -442,7 +428,6 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     }
 
-    // Forzar actualización de marcadores después de seleccionar vehículo
     setTimeout(() => {
       const vehicles = this.vehicles();
       const locations = this.locations();
@@ -456,7 +441,6 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
     this.selectedVehicle.set(null);
 
     if (this.mapInstance && this.locations().length > 0) {
-      // Calcular bounds para mostrar todos los vehículos
       const bounds = new window.maplibregl.LngLatBounds();
       this.locations().forEach((location) => {
         bounds.extend([location.longitude, location.latitude]);
@@ -536,7 +520,8 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Métodos para geofences
   private loadGeofences(): void {
-    this.geofenceService.loadGeofences()
+    this.geofenceService
+      .loadGeofences()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (geofences) => {
@@ -547,17 +532,16 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
         },
         error: (error) => {
           console.error('Error loading geofences:', error);
-        }
+        },
       });
   }
 
   private updateGeofenceLayers(geofences: Geofence[]): void {
     if (!this.mapInstance) return;
 
-    // Limpiar capas existentes
     this.clearGeofenceLayers();
 
-    geofences.forEach(geofence => {
+    geofences.forEach((geofence) => {
       if (geofence.isActive) {
         this.addGeofenceLayer(geofence);
       }
@@ -570,27 +554,27 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
     const sourceId = `geofence-${geofence.id}`;
     const layerId = `geofence-layer-${geofence.id}`;
 
-    // Crear círculo para la geofence
-    const circle = this.createCircle(geofence.center.latitude, geofence.center.longitude, geofence.radius);
+    const circle = this.createCircle(
+      geofence.center.latitude,
+      geofence.center.longitude,
+      geofence.radius
+    );
 
-    // Agregar fuente
     this.mapInstance.addSource(sourceId, {
       type: 'geojson',
-      data: circle
+      data: circle,
     });
 
-    // Agregar capa de relleno
     this.mapInstance.addLayer({
       id: layerId,
       type: 'fill',
       source: sourceId,
       paint: {
         'fill-color': geofence.color || this.getGeofenceColor(geofence.type),
-        'fill-opacity': 0.2
-      }
+        'fill-opacity': 0.2,
+      },
     });
 
-    // Agregar capa de borde
     this.mapInstance.addLayer({
       id: `${layerId}-border`,
       type: 'line',
@@ -598,11 +582,10 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
       paint: {
         'line-color': geofence.color || this.getGeofenceColor(geofence.type),
         'line-width': 2,
-        'line-opacity': 0.8
-      }
+        'line-opacity': 0.8,
+      },
     });
 
-    // Agregar etiqueta
     this.mapInstance.addLayer({
       id: `${layerId}-label`,
       type: 'symbol',
@@ -612,13 +595,13 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
         'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
         'text-size': 12,
         'text-offset': [0, 0],
-        'text-anchor': 'center'
+        'text-anchor': 'center',
       },
       paint: {
         'text-color': '#000000',
         'text-halo-color': '#FFFFFF',
-        'text-halo-width': 2
-      }
+        'text-halo-width': 2,
+      },
     });
 
     this.geofenceLayers.set(geofence.id, { sourceId, layerId });
@@ -627,26 +610,26 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
   private createCircle(lat: number, lng: number, radius: number): any {
     const points = 64;
     const coords = [];
-    
+
     for (let i = 0; i < points; i++) {
       const angle = (i * 360) / points;
-      const dx = radius * Math.cos(angle * Math.PI / 180);
-      const dy = radius * Math.sin(angle * Math.PI / 180);
-      
-      const newLat = lat + (dy / 111320); // Aproximación: 1 grado ≈ 111320 metros
-      const newLng = lng + (dx / (111320 * Math.cos(lat * Math.PI / 180)));
-      
+      const dx = radius * Math.cos((angle * Math.PI) / 180);
+      const dy = radius * Math.sin((angle * Math.PI) / 180);
+
+      const newLat = lat + dy / 111320; // Aproximación: 1 grado ≈ 111320 metros
+      const newLng = lng + dx / (111320 * Math.cos((lat * Math.PI) / 180));
+
       coords.push([newLng, newLat]);
     }
-    
+
     coords.push(coords[0]); // Cerrar el polígono
-    
+
     return {
       type: 'Feature',
       geometry: {
         type: 'Polygon',
-        coordinates: [coords]
-      }
+        coordinates: [coords],
+      },
     };
   }
 
@@ -683,9 +666,10 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
   private loadHistoricalRoutes(): void {
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 7); // Últimos 7 días
+    startDate.setDate(startDate.getDate() - 7);
 
-    this.routeService.getHistoricalRoutes('', startDate, endDate, 20)
+    this.routeService
+      .getHistoricalRoutes('', startDate, endDate, 20)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (routes) => {
@@ -693,7 +677,7 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
         },
         error: (error) => {
           console.error('Error loading historical routes:', error);
-        }
+        },
       });
   }
 
@@ -710,53 +694,50 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
   private displayRouteOnMap(route: HistoricalRoute): void {
     if (!this.mapInstance || !route.points.length) return;
 
-    // Limpiar rutas existentes
     this.clearRouteLayers();
 
     const routeId = `route-${route.id}`;
     const sourceId = `route-source-${route.id}`;
 
-    // Crear GeoJSON para la ruta
     const routeGeoJSON = {
       type: 'Feature',
       geometry: {
         type: 'LineString',
-        coordinates: route.points.map(point => [point.longitude, point.latitude])
+        coordinates: route.points.map((point) => [
+          point.longitude,
+          point.latitude,
+        ]),
       },
       properties: {
         routeId: route.id,
         vehicleId: route.vehicleId,
         totalDistance: route.totalDistance,
-        averageSpeed: route.averageSpeed
-      }
+        averageSpeed: route.averageSpeed,
+      },
     };
 
-    // Agregar fuente
     this.mapInstance.addSource(sourceId, {
       type: 'geojson',
-      data: routeGeoJSON
+      data: routeGeoJSON,
     });
 
-    // Agregar capa de línea
     this.mapInstance.addLayer({
       id: routeId,
       type: 'line',
       source: sourceId,
       layout: {
         'line-join': 'round',
-        'line-cap': 'round'
+        'line-cap': 'round',
       },
       paint: {
         'line-color': '#3b82f6',
         'line-width': 4,
-        'line-opacity': 0.8
-      }
+        'line-opacity': 0.8,
+      },
     });
 
-    // Agregar marcadores de inicio y fin
     this.addRouteMarkers(route, sourceId);
 
-    // Ajustar vista para mostrar toda la ruta
     this.fitRouteBounds(route);
 
     this.routeLayers.set(route.id, { sourceId, routeId });
@@ -768,37 +749,41 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
     const startPoint = route.points[0];
     const endPoint = route.points[route.points.length - 1];
 
-    // Marcador de inicio
     const startMarker = new window.maplibregl.Marker({
       color: '#10b981',
-      scale: 1.2
+      scale: 1.2,
     })
       .setLngLat([startPoint.longitude, startPoint.latitude])
-      .setPopup(new window.maplibregl.Popup().setHTML(`
+      .setPopup(
+        new window.maplibregl.Popup().setHTML(`
         <div class="p-2">
           <h4 class="font-bold text-green-600">Inicio de Ruta</h4>
           <p class="text-sm">${startPoint.timestamp.toLocaleString()}</p>
           <p class="text-sm">Velocidad: ${startPoint.speed} km/h</p>
           <p class="text-sm">Combustible: ${startPoint.fuelLevel}%</p>
         </div>
-      `))
+      `)
+      )
       .addTo(this.mapInstance);
 
-    // Marcador de fin
     const endMarker = new window.maplibregl.Marker({
       color: '#ef4444',
-      scale: 1.2
+      scale: 1.2,
     })
       .setLngLat([endPoint.longitude, endPoint.latitude])
-      .setPopup(new window.maplibregl.Popup().setHTML(`
+      .setPopup(
+        new window.maplibregl.Popup().setHTML(`
         <div class="p-2">
           <h4 class="font-bold text-red-600">Fin de Ruta</h4>
           <p class="text-sm">${endPoint.timestamp.toLocaleString()}</p>
           <p class="text-sm">Velocidad: ${endPoint.speed} km/h</p>
           <p class="text-sm">Combustible: ${endPoint.fuelLevel}%</p>
-          <p class="text-sm">Distancia Total: ${route.totalDistance.toFixed(2)} km</p>
+          <p class="text-sm">Distancia Total: ${route.totalDistance.toFixed(
+            2
+          )} km</p>
         </div>
-      `))
+      `)
+      )
       .addTo(this.mapInstance);
 
     this.routeLayers.set(`${route.id}-start`, startMarker);
@@ -809,7 +794,7 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!this.mapInstance || route.points.length < 2) return;
 
     const bounds = new window.maplibregl.LngLatBounds();
-    route.points.forEach(point => {
+    route.points.forEach((point) => {
       bounds.extend([point.longitude, point.latitude]);
     });
 
