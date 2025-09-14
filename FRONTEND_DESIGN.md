@@ -133,7 +133,3 @@ El **Frontend del IoT Fleet Management System** implementa una arquitectura mode
 La implementación de **PWA capabilities**, **comunicación en tiempo real**, y **optimizaciones de rendimiento** asegura una experiencia de usuario excepcional, mientras que la arquitectura modular permite evolución y mantenimiento a largo plazo.
 
 ---
-
-*Documento creado: Enero 2024*  
-*Versión: 1.0*  
-*Autor: Equipo de Desarrollo IoT Fleet Frontend*
