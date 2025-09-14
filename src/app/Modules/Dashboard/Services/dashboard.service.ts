@@ -91,7 +91,6 @@ export class DashboardService {
       headers: this.authService.getAuthHeaders()
     }).pipe(
       map(response => {
-        console.log('Vehicles response:', response);
         if (response && response.success && response.data && Array.isArray(response.data)) {
           return response.data.map((vehicle: any) => ({
             id: this.privacyService.maskVehicleId(vehicle.Id),
@@ -104,12 +103,10 @@ export class DashboardService {
             fuelEfficiency: vehicle.AverageConsumption || 0
           })) as Vehicle[];
         }
-        console.log('No vehicles data available');
         return [];
       }),
       tap(vehicles => this.cacheVehicles(vehicles)),
       catchError(error => {
-        console.error('Error fetching vehicles:', error);
         const cachedVehicles = this.getCachedVehicles();
         return cachedVehicles.length > 0 ? of(cachedVehicles) : throwError(error);
       })
@@ -121,11 +118,8 @@ export class DashboardService {
       headers: this.authService.getAuthHeaders()
     }).pipe(
       map(response => {
-        console.log('Current locations response:', response);
         if (response && response.success && response.data && Array.isArray(response.data)) {
           const allLocations = this.mapSensorDataToLocations(response.data);
-          
-          // Filtrar para obtener solo la ubicación más reciente por vehículo
           const latestLocations = this.getLatestLocationsPerVehicle(allLocations);
           
           if (latestLocations.length > 0) {
@@ -134,12 +128,10 @@ export class DashboardService {
           
           return latestLocations;
         }
-        console.log('No current locations data available');
         return [];
       }),
       tap(locations => this.cacheLocations(locations)),
       catchError(error => {
-        console.error('Error fetching current locations:', error);
         const cachedLocations = this.getCachedLocations();
         return cachedLocations.length > 0 ? of(cachedLocations) : throwError(error);
       })
@@ -151,7 +143,6 @@ export class DashboardService {
       headers: this.authService.getAuthHeaders()
     }).pipe(
       map(response => {
-        console.log('Real-time data response:', response);
         if (response && response.success && response.data && Array.isArray(response.data)) {
           const realTimeLocations = response.data.map((data: any) => ({
             id: this.privacyService.maskDeviceId(data.VehicleId),
@@ -170,7 +161,7 @@ export class DashboardService {
               licensePlate: data.LicensePlate,
               model: data.Model,
               brand: data.Brand,
-              fuelCapacity: 75, // Valor por defecto
+              fuelCapacity: 75,
               averageConsumption: data.FuelConsumption || 8.5,
               fleetId: this.privacyService.maskDeviceId(data.VehicleId),
               createdAt: new Date(),
@@ -178,19 +169,15 @@ export class DashboardService {
             }
           })) as Location[];
 
-          // Actualizar vehículos con datos en tiempo real
           if (realTimeLocations.length > 0) {
             this.createVehiclesFromLocations(realTimeLocations);
           }
 
           return realTimeLocations;
         }
-        console.log('No real-time data available, falling back to historical data');
         return [];
       }),
       catchError(error => {
-        console.error('Error fetching real-time data:', error);
-        // Fallback a datos históricos si falla la simulación
         return this.getCurrentLocations();
       })
     );

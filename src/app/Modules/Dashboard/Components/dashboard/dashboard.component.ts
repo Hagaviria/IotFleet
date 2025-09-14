@@ -8,7 +8,6 @@ import { AuthService } from '../../../../Security/Services/auth.service';
 import { SensorDataService } from '../../Services/sensor-data.service';
 import { WebSocketService } from '../../Services/websocket.service';
 import { SimulationControlService, SimulationStatus } from '../../Services/simulation-control.service';
-import { LocalSimulationService } from '../../Services/local-simulation.service';
 import {
   DashboardStats,
   Vehicle,
@@ -79,8 +78,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private confirmationService: ConfirmationService,
     private sensorDataService: SensorDataService,
     private webSocketService: WebSocketService,
-    private simulationControlService: SimulationControlService,
-    private localSimulationService: LocalSimulationService
+    private simulationControlService: SimulationControlService
   ) {}
 
   ngOnInit(): void {
@@ -485,22 +483,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Métodos para controlar la simulación
   startSimulation(): void {
-    console.log('Starting simulation...');
     this.simulationControlService.startSimulation().subscribe({
       next: (response) => {
-        console.log('Start simulation response:', response);
         if (response.success) {
           this.messageService.add({
             severity: 'success',
             summary: 'Simulación Iniciada',
             detail: 'La simulación de vehículos ha comenzado'
           });
-          console.log('Updating simulation status...');
           this.simulationControlService.updateSimulationStatus();
-          
-          // Forzar actualización después de un pequeño delay
           setTimeout(() => {
-            console.log('Force updating simulation status after delay...');
             this.simulationControlService.updateSimulationStatus();
           }, 1000);
         } else {
@@ -512,7 +504,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }
       },
       error: (error) => {
-        console.error('Error starting simulation:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -551,40 +542,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private startRealTimeUpdates(): void {
-    // Limpiar intervalo anterior si existe
     if (this.realTimeInterval) {
       clearInterval(this.realTimeInterval);
     }
     
-    // Obtener datos del backend cada 3 segundos
     this.realTimeInterval = setInterval(() => {
-      console.log('Updating real-time data from backend...');
       this.dashboardService.getRealTimeData().subscribe({
         next: (locations) => {
           if (locations.length > 0) {
             this.locations.set(locations);
-            console.log('Updated locations from backend:', locations.length);
-          } else {
-            console.log('No locations received from backend');
           }
         },
         error: (error) => {
-          console.error('Error getting real-time data from backend:', error);
-          // Fallback a simulación local solo si el backend no está disponible
-          if (error.status === 0 || error.status === 404) {
-            console.log('Backend not available, trying local simulation...');
-            this.localSimulationService.getLocationsObservable().subscribe({
-              next: (locations) => {
-                if (locations.length > 0) {
-                  this.locations.set(locations);
-                  console.log('Updated locations from local simulation:', locations.length);
-                }
-              },
-              error: (localError) => {
-                console.error('Error updating local simulation data:', localError);
-              }
-            });
-          }
+          // Backend not available
         }
       });
     }, 3000);
@@ -594,7 +564,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.realTimeInterval) {
       clearInterval(this.realTimeInterval);
       this.realTimeInterval = null;
-      console.log('Stopped real-time updates');
     }
   }
 

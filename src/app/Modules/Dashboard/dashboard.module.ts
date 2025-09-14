@@ -44,7 +44,6 @@ import { MapService } from './Services/map.service';
 import { AlertsService } from './Services/alerts.service';
 import { OfflineService } from './Services/offline.service';
 import { SimulationControlService } from './Services/simulation-control.service';
-import { LocalSimulationService } from './Services/local-simulation.service';
 
 @NgModule({
   declarations: [
@@ -93,7 +92,6 @@ import { LocalSimulationService } from './Services/local-simulation.service';
     AlertsService,
     OfflineService,
     SimulationControlService,
-    LocalSimulationService,
     MessageService,
     ConfirmationService
   ]
