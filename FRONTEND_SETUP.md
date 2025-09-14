@@ -39,29 +39,8 @@ ng version
 
 ## 📥 Instalación de Dependencias
 
-### 1. **Instalar Node.js**
 
-#### Windows
-```powershell
-# Descargar desde: https://nodejs.org/
-# O usar winget
-winget install OpenJS.NodeJS
-```
-
-#### macOS
-```bash
-# Usar Homebrew
-brew install node
-```
-
-#### Linux (Ubuntu/Debian)
-```bash
-# Usar NodeSource repository
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt-get install -y nodejs
-```
-
-### 2. **Instalar Angular CLI**
+### 1. **Instalar Angular CLI**
 
 ```bash
 # Instalar Angular CLI globalmente
@@ -71,7 +50,7 @@ npm install -g @angular/cli@19
 ng version
 ```
 
-### 3. **Instalar Extensiones de VS Code (Recomendado)**
+### 2. **Instalar Extensiones de VS Code (Recomendado)**
 
 ```json
 // .vscode/extensions.json
