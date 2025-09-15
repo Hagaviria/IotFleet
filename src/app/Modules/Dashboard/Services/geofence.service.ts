@@ -40,7 +40,7 @@ export interface GeofenceEvent {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class GeofenceService {
   private readonly API_BASE_URL = 'https://localhost:7162/api';
@@ -57,49 +57,47 @@ export class GeofenceService {
     this.loadGeofences();
   }
 
-  /**
-   * Cargar todas las geofences
-   */
   loadGeofences(): Observable<Geofence[]> {
-    return this.http.get<any>(`${this.API_BASE_URL}/Geofences`, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      map(response => {
-        if (response && response.success && response.data) {
-          const geofences = response.data.map((item: any) => ({
-            id: item.Id,
-            name: item.Name,
-            center: {
-              latitude: item.CenterLatitude,
-              longitude: item.CenterLongitude
-            },
-            radius: item.Radius,
-            type: item.Type,
-            isActive: item.IsActive,
-            createdAt: new Date(item.CreatedAt),
-            updatedAt: new Date(item.UpdatedAt),
-            description: item.Description,
-            color: item.Color || this.getDefaultColor(item.Type),
-            alertOnEnter: item.AlertOnEnter,
-            alertOnExit: item.AlertOnExit
-          })) as Geofence[];
-          
-          this.geofencesSubject.next(geofences);
-          return geofences;
-        }
-        return [];
-      }),
-      catchError(error => {
-        console.error('Error loading geofences:', error);
-        return of([]);
+    return this.http
+      .get<any>(`${this.API_BASE_URL}/Geofences`, {
+        headers: this.authService.getAuthHeaders(),
       })
-    );
+      .pipe(
+        map((response) => {
+          if (response && response.success && response.data) {
+            const geofences = response.data.map((item: any) => ({
+              id: item.Id,
+              name: item.Name,
+              center: {
+                latitude: item.CenterLatitude,
+                longitude: item.CenterLongitude,
+              },
+              radius: item.Radius,
+              type: item.Type,
+              isActive: item.IsActive,
+              createdAt: new Date(item.CreatedAt),
+              updatedAt: new Date(item.UpdatedAt),
+              description: item.Description,
+              color: item.Color || this.getDefaultColor(item.Type),
+              alertOnEnter: item.AlertOnEnter,
+              alertOnExit: item.AlertOnExit,
+            })) as Geofence[];
+
+            this.geofencesSubject.next(geofences);
+            return geofences;
+          }
+          return [];
+        }),
+        catchError((error) => {
+          console.error('Error loading geofences:', error);
+          return of([]);
+        })
+      );
   }
 
-  /**
-   * Crear una nueva geofence
-   */
-  createGeofence(geofence: Omit<Geofence, 'id' | 'createdAt' | 'updatedAt'>): Observable<Geofence> {
+  createGeofence(
+    geofence: Omit<Geofence, 'id' | 'createdAt' | 'updatedAt'>
+  ): Observable<Geofence> {
     const payload = {
       Name: geofence.name,
       CenterLatitude: geofence.center.latitude,
@@ -110,51 +108,52 @@ export class GeofenceService {
       Description: geofence.description,
       Color: geofence.color,
       AlertOnEnter: geofence.alertOnEnter,
-      AlertOnExit: geofence.alertOnExit
+      AlertOnExit: geofence.alertOnExit,
     };
 
-    return this.http.post<any>(`${this.API_BASE_URL}/Geofences`, payload, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      map(response => {
-        if (response && response.success && response.data) {
-          const newGeofence: Geofence = {
-            id: response.data.Id,
-            name: response.data.Name,
-            center: {
-              latitude: response.data.CenterLatitude,
-              longitude: response.data.CenterLongitude
-            },
-            radius: response.data.Radius,
-            type: response.data.Type,
-            isActive: response.data.IsActive,
-            createdAt: new Date(response.data.CreatedAt),
-            updatedAt: new Date(response.data.UpdatedAt),
-            description: response.data.Description,
-            color: response.data.Color,
-            alertOnEnter: response.data.AlertOnEnter,
-            alertOnExit: response.data.AlertOnExit
-          };
-          
-          // Agregar a la lista local
-          const currentGeofences = this.geofencesSubject.value;
-          this.geofencesSubject.next([...currentGeofences, newGeofence]);
-          
-          return newGeofence;
-        }
-        throw new Error('Failed to create geofence');
-      }),
-      catchError(error => {
-        console.error('Error creating geofence:', error);
-        throw error;
+    return this.http
+      .post<any>(`${this.API_BASE_URL}/Geofences`, payload, {
+        headers: this.authService.getAuthHeaders(),
       })
-    );
+      .pipe(
+        map((response) => {
+          if (response && response.success && response.data) {
+            const newGeofence: Geofence = {
+              id: response.data.Id,
+              name: response.data.Name,
+              center: {
+                latitude: response.data.CenterLatitude,
+                longitude: response.data.CenterLongitude,
+              },
+              radius: response.data.Radius,
+              type: response.data.Type,
+              isActive: response.data.IsActive,
+              createdAt: new Date(response.data.CreatedAt),
+              updatedAt: new Date(response.data.UpdatedAt),
+              description: response.data.Description,
+              color: response.data.Color,
+              alertOnEnter: response.data.AlertOnEnter,
+              alertOnExit: response.data.AlertOnExit,
+            };
+
+            const currentGeofences = this.geofencesSubject.value;
+            this.geofencesSubject.next([...currentGeofences, newGeofence]);
+
+            return newGeofence;
+          }
+          throw new Error('Failed to create geofence');
+        }),
+        catchError((error) => {
+          console.error('Error creating geofence:', error);
+          throw error;
+        })
+      );
   }
 
-  /**
-   * Actualizar una geofence existente
-   */
-  updateGeofence(id: string, geofence: Partial<Geofence>): Observable<Geofence> {
+  updateGeofence(
+    id: string,
+    geofence: Partial<Geofence>
+  ): Observable<Geofence> {
     const payload = {
       Name: geofence.name,
       CenterLatitude: geofence.center?.latitude,
@@ -165,119 +164,122 @@ export class GeofenceService {
       Description: geofence.description,
       Color: geofence.color,
       AlertOnEnter: geofence.alertOnEnter,
-      AlertOnExit: geofence.alertOnExit
+      AlertOnExit: geofence.alertOnExit,
     };
 
-    return this.http.put<any>(`${this.API_BASE_URL}/Geofences/${id}`, payload, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      map(response => {
-        if (response && response.success && response.data) {
-          const updatedGeofence: Geofence = {
-            id: response.data.Id,
-            name: response.data.Name,
-            center: {
-              latitude: response.data.CenterLatitude,
-              longitude: response.data.CenterLongitude
-            },
-            radius: response.data.Radius,
-            type: response.data.Type,
-            isActive: response.data.IsActive,
-            createdAt: new Date(response.data.CreatedAt),
-            updatedAt: new Date(response.data.UpdatedAt),
-            description: response.data.Description,
-            color: response.data.Color,
-            alertOnEnter: response.data.AlertOnEnter,
-            alertOnExit: response.data.AlertOnExit
-          };
-          
-          // Actualizar en la lista local
-          const currentGeofences = this.geofencesSubject.value;
-          const index = currentGeofences.findIndex(g => g.id === id);
-          if (index !== -1) {
-            currentGeofences[index] = updatedGeofence;
-            this.geofencesSubject.next([...currentGeofences]);
+    return this.http
+      .put<any>(`${this.API_BASE_URL}/Geofences/${id}`, payload, {
+        headers: this.authService.getAuthHeaders(),
+      })
+      .pipe(
+        map((response) => {
+          if (response && response.success && response.data) {
+            const updatedGeofence: Geofence = {
+              id: response.data.Id,
+              name: response.data.Name,
+              center: {
+                latitude: response.data.CenterLatitude,
+                longitude: response.data.CenterLongitude,
+              },
+              radius: response.data.Radius,
+              type: response.data.Type,
+              isActive: response.data.IsActive,
+              createdAt: new Date(response.data.CreatedAt),
+              updatedAt: new Date(response.data.UpdatedAt),
+              description: response.data.Description,
+              color: response.data.Color,
+              alertOnEnter: response.data.AlertOnEnter,
+              alertOnExit: response.data.AlertOnExit,
+            };
+
+            const currentGeofences = this.geofencesSubject.value;
+            const index = currentGeofences.findIndex((g) => g.id === id);
+            if (index !== -1) {
+              currentGeofences[index] = updatedGeofence;
+              this.geofencesSubject.next([...currentGeofences]);
+            }
+
+            return updatedGeofence;
           }
-          
-          return updatedGeofence;
-        }
-        throw new Error('Failed to update geofence');
-      }),
-      catchError(error => {
-        console.error('Error updating geofence:', error);
-        throw error;
-      })
-    );
+          throw new Error('Failed to update geofence');
+        }),
+        catchError((error) => {
+          console.error('Error updating geofence:', error);
+          throw error;
+        })
+      );
   }
 
-  /**
-   * Eliminar una geofence
-   */
   deleteGeofence(id: string): Observable<void> {
-    return this.http.delete<any>(`${this.API_BASE_URL}/Geofences/${id}`, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      map(response => {
-        if (response && response.success) {
-          // Remover de la lista local
-          const currentGeofences = this.geofencesSubject.value;
-          const filteredGeofences = currentGeofences.filter(g => g.id !== id);
-          this.geofencesSubject.next(filteredGeofences);
-        }
-      }),
-      catchError(error => {
-        console.error('Error deleting geofence:', error);
-        throw error;
+    return this.http
+      .delete<any>(`${this.API_BASE_URL}/Geofences/${id}`, {
+        headers: this.authService.getAuthHeaders(),
       })
-    );
+      .pipe(
+        map((response) => {
+          if (response && response.success) {
+            const currentGeofences = this.geofencesSubject.value;
+            const filteredGeofences = currentGeofences.filter(
+              (g) => g.id !== id
+            );
+            this.geofencesSubject.next(filteredGeofences);
+          }
+        }),
+        catchError((error) => {
+          console.error('Error deleting geofence:', error);
+          throw error;
+        })
+      );
   }
 
-  /**
-   * Obtener eventos de geofence
-   */
-  getGeofenceEvents(geofenceId?: string, vehicleId?: string, hours: number = 24): Observable<GeofenceEvent[]> {
+  getGeofenceEvents(
+    geofenceId?: string,
+    vehicleId?: string,
+    hours: number = 24
+  ): Observable<GeofenceEvent[]> {
     const params = new URLSearchParams();
     if (geofenceId) params.append('geofenceId', geofenceId);
     if (vehicleId) params.append('vehicleId', vehicleId);
     params.append('hours', hours.toString());
 
-    return this.http.get<any>(`${this.API_BASE_URL}/Geofences/events?${params}`, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      map(response => {
-        if (response && response.success && response.data) {
-          const events = response.data.map((item: any) => ({
-            id: item.Id,
-            geofenceId: item.GeofenceId,
-            vehicleId: item.VehicleId,
-            eventType: item.EventType,
-            timestamp: new Date(item.Timestamp),
-            location: {
-              latitude: item.Latitude,
-              longitude: item.Longitude
-            },
-            vehicleInfo: item.VehicleInfo ? {
-              licensePlate: item.VehicleInfo.LicensePlate,
-              model: item.VehicleInfo.Model,
-              brand: item.VehicleInfo.Brand
-            } : undefined
-          })) as GeofenceEvent[];
-          
-          this.geofenceEventsSubject.next(events);
-          return events;
-        }
-        return [];
-      }),
-      catchError(error => {
-        console.error('Error loading geofence events:', error);
-        return of([]);
+    return this.http
+      .get<any>(`${this.API_BASE_URL}/Geofences/events?${params}`, {
+        headers: this.authService.getAuthHeaders(),
       })
-    );
+      .pipe(
+        map((response) => {
+          if (response && response.success && response.data) {
+            const events = response.data.map((item: any) => ({
+              id: item.Id,
+              geofenceId: item.GeofenceId,
+              vehicleId: item.VehicleId,
+              eventType: item.EventType,
+              timestamp: new Date(item.Timestamp),
+              location: {
+                latitude: item.Latitude,
+                longitude: item.Longitude,
+              },
+              vehicleInfo: item.VehicleInfo
+                ? {
+                    licensePlate: item.VehicleInfo.LicensePlate,
+                    model: item.VehicleInfo.Model,
+                    brand: item.VehicleInfo.Brand,
+                  }
+                : undefined,
+            })) as GeofenceEvent[];
+
+            this.geofenceEventsSubject.next(events);
+            return events;
+          }
+          return [];
+        }),
+        catchError((error) => {
+          console.error('Error loading geofence events:', error);
+          return of([]);
+        })
+      );
   }
 
-  /**
-   * Verificar si un punto está dentro de una geofence
-   */
   isPointInGeofence(
     point: { latitude: number; longitude: number },
     geofence: Geofence
@@ -288,65 +290,55 @@ export class GeofenceService {
       geofence.center.latitude,
       geofence.center.longitude
     );
-    
+
     return distance <= geofence.radius;
   }
 
-  /**
-   * Calcular distancia entre dos puntos en metros
-   */
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371e3; // Radio de la Tierra en metros
-    const φ1 = lat1 * Math.PI / 180;
-    const φ2 = lat2 * Math.PI / 180;
-    const Δφ = (lat2 - lat1) * Math.PI / 180;
-    const Δλ = (lon2 - lon1) * Math.PI / 180;
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number {
+    const R = 6371e3;
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
 
-    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ/2) * Math.sin(Δλ/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-    return R * c; // Distancia en metros
+    return R * c;
   }
 
-  /**
-   * Obtener color por defecto según el tipo de geofence
-   */
   private getDefaultColor(type: string): string {
     switch (type) {
       case 'inclusion':
-        return '#10b981'; // Verde
+        return '#10b981';
       case 'exclusion':
-        return '#ef4444'; // Rojo
+        return '#ef4444';
       default:
-        return '#6b7280'; // Gris
+        return '#6b7280';
     }
   }
 
-  /**
-   * Obtener geofences activas
-   */
   getActiveGeofences(): Geofence[] {
-    return this.geofencesSubject.value.filter(g => g.isActive);
+    return this.geofencesSubject.value.filter((g) => g.isActive);
   }
 
-  /**
-   * Obtener geofences por tipo
-   */
   getGeofencesByType(type: 'inclusion' | 'exclusion'): Geofence[] {
-    return this.geofencesSubject.value.filter(g => g.type === type);
+    return this.geofencesSubject.value.filter((g) => g.type === type);
   }
 
-  /**
-   * Buscar geofences por nombre
-   */
   searchGeofences(query: string): Geofence[] {
     const lowerQuery = query.toLowerCase();
-    return this.geofencesSubject.value.filter(g => 
-      g.name.toLowerCase().includes(lowerQuery) ||
-      (g.description && g.description.toLowerCase().includes(lowerQuery))
+    return this.geofencesSubject.value.filter(
+      (g) =>
+        g.name.toLowerCase().includes(lowerQuery) ||
+        (g.description && g.description.toLowerCase().includes(lowerQuery))
     );
   }
 }
-

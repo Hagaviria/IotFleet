@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import {
+  HttpClientTestingModule,
+  HttpTestingController,
+} from '@angular/common/http/testing';
 import { PLATFORM_ID } from '@angular/core';
 import { AuthService } from './auth.service';
 
@@ -11,17 +14,13 @@ describe('AuthService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [
-        AuthService,
-        { provide: PLATFORM_ID, useValue: 'browser' }
-      ]
+      providers: [AuthService, { provide: PLATFORM_ID, useValue: 'browser' }],
     });
-    
+
     service = TestBed.inject(AuthService);
     httpMock = TestBed.inject(HttpTestingController);
     platformId = TestBed.inject(PLATFORM_ID);
-    
-    // Limpiar localStorage antes de cada test
+
     localStorage.clear();
   });
 
@@ -39,11 +38,11 @@ describe('AuthService', () => {
           NombrePerfil: 'Admin',
           Identificacion: '12345678',
           Correo: 'admin@test.com',
-          Nombre: 'Test Admin'
-        }
+          Nombre: 'Test Admin',
+        },
       };
 
-      service.login('admin@test.com', 'password123').subscribe(result => {
+      service.login('admin@test.com', 'password123').subscribe((result) => {
         expect(result).toBe(true);
         expect(service.isAuthenticated()).toBe(true);
         expect(service.isAdmin()).toBe(true);
@@ -57,19 +56,19 @@ describe('AuthService', () => {
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({
         Email: 'admin@test.com',
-        Password: 'password123'
+        Password: 'password123',
       });
-      
+
       req.flush(mockResponse);
     });
 
     it('should fail login with invalid credentials', (done) => {
       const mockResponse = {
         success: false,
-        message: 'Invalid credentials'
+        message: 'Invalid credentials',
       };
 
-      service.login('invalid@test.com', 'wrongpassword').subscribe(result => {
+      service.login('invalid@test.com', 'wrongpassword').subscribe((result) => {
         expect(result).toBe(false);
         expect(service.isAuthenticated()).toBe(false);
         expect(service.getToken()).toBeNull();
@@ -81,7 +80,7 @@ describe('AuthService', () => {
     });
 
     it('should handle login error gracefully', (done) => {
-      service.login('test@test.com', 'password').subscribe(result => {
+      service.login('test@test.com', 'password').subscribe((result) => {
         expect(result).toBe(false);
         expect(service.isAuthenticated()).toBe(false);
         done();
@@ -99,11 +98,11 @@ describe('AuthService', () => {
           NombrePerfil: 'User',
           Identificacion: '87654321',
           Correo: 'user@test.com',
-          Nombre: 'Test User'
-        }
+          Nombre: 'Test User',
+        },
       };
 
-      service.login('user@test.com', 'password123').subscribe(result => {
+      service.login('user@test.com', 'password123').subscribe((result) => {
         expect(result).toBe(true);
         expect(service.getUserRole()).toBe('User');
         expect(service.isAdmin()).toBe(false);
@@ -117,17 +116,15 @@ describe('AuthService', () => {
 
   describe('Logout', () => {
     it('should logout successfully and clear all stored data', () => {
-      // Primero hacer login
       localStorage.setItem('auth_token', 'mock-token');
       localStorage.setItem('user_role', 'Admin');
       localStorage.setItem('user_id', '12345678');
-      
+
       service.initialize();
       expect(service.isAuthenticated()).toBe(true);
 
-      // Luego hacer logout
       service.logout();
-      
+
       expect(service.isAuthenticated()).toBe(false);
       expect(service.getToken()).toBeNull();
       expect(service.getUserRole()).toBe('User');
@@ -139,7 +136,7 @@ describe('AuthService', () => {
     it('should return stored token when available', () => {
       localStorage.setItem('auth_token', 'stored-token');
       service.initialize();
-      
+
       expect(service.getToken()).toBe('stored-token');
     });
 
@@ -151,7 +148,7 @@ describe('AuthService', () => {
     it('should generate correct auth headers', () => {
       localStorage.setItem('auth_token', 'test-token');
       service.initialize();
-      
+
       const headers = service.getAuthHeaders();
       expect(headers.get('Authorization')).toBe('Bearer test-token');
       expect(headers.get('Content-Type')).toBe('application/json');
@@ -159,7 +156,7 @@ describe('AuthService', () => {
 
     it('should generate headers without token when not authenticated', () => {
       service.initialize();
-      
+
       const headers = service.getAuthHeaders();
       expect(headers.get('Authorization')).toBe('');
       expect(headers.get('Content-Type')).toBe('application/json');
@@ -170,7 +167,7 @@ describe('AuthService', () => {
     it('should return correct user role', () => {
       localStorage.setItem('user_role', 'Admin');
       service.initialize();
-      
+
       expect(service.getUserRole()).toBe('Admin');
     });
 
@@ -182,21 +179,21 @@ describe('AuthService', () => {
     it('should correctly identify admin users', () => {
       localStorage.setItem('user_role', 'Admin');
       service.initialize();
-      
+
       expect(service.isAdmin()).toBe(true);
     });
 
     it('should correctly identify non-admin users', () => {
       localStorage.setItem('user_role', 'User');
       service.initialize();
-      
+
       expect(service.isAdmin()).toBe(false);
     });
 
     it('should handle case-insensitive role comparison', () => {
       localStorage.setItem('user_role', 'admin');
       service.initialize();
-      
+
       expect(service.isAdmin()).toBe(true);
     });
   });
@@ -205,7 +202,7 @@ describe('AuthService', () => {
     it('should initialize with correct authentication state', () => {
       localStorage.setItem('auth_token', 'test-token');
       service.initialize();
-      
+
       expect(service.isAuthenticated()).toBe(true);
     });
 
@@ -222,8 +219,8 @@ describe('AuthService', () => {
           NombrePerfil: 'Admin',
           Identificacion: '12345678',
           Correo: 'admin@test.com',
-          Nombre: 'Test Admin'
-        }
+          Nombre: 'Test Admin',
+        },
       };
 
       service.login('admin@test.com', 'password123').subscribe(() => {
@@ -240,7 +237,7 @@ describe('AuthService', () => {
     it('should return stored user ID', () => {
       localStorage.setItem('user_id', '12345678');
       service.initialize();
-      
+
       expect(service.getUserId()).toBe('12345678');
     });
 
@@ -252,9 +249,8 @@ describe('AuthService', () => {
 
   describe('Platform Safety', () => {
     it('should handle server-side rendering gracefully', () => {
-      // Simular entorno de servidor
       const serverService = new AuthService();
-      
+
       expect(serverService.getToken()).toBeNull();
       expect(serverService.getUserRole()).toBe('User');
       expect(serverService.getUserId()).toBeNull();
@@ -265,13 +261,13 @@ describe('AuthService', () => {
   describe('Observable State', () => {
     it('should emit authentication state changes', (done) => {
       let stateChanges = 0;
-      
-      service.userState$.subscribe(isLoggedIn => {
+
+      service.userState$.subscribe((isLoggedIn) => {
         stateChanges++;
         if (stateChanges === 1) {
-          expect(isLoggedIn).toBe(false); // Estado inicial
+          expect(isLoggedIn).toBe(false);
         } else if (stateChanges === 2) {
-          expect(isLoggedIn).toBe(true); // Después del login
+          expect(isLoggedIn).toBe(true);
           done();
         }
       });
@@ -283,8 +279,8 @@ describe('AuthService', () => {
           NombrePerfil: 'Admin',
           Identificacion: '12345678',
           Correo: 'admin@test.com',
-          Nombre: 'Test Admin'
-        }
+          Nombre: 'Test Admin',
+        },
       };
 
       service.login('admin@test.com', 'password123').subscribe();
@@ -295,13 +291,13 @@ describe('AuthService', () => {
 
     it('should emit user role changes', (done) => {
       let roleChanges = 0;
-      
-      service.userRole$.subscribe(role => {
+
+      service.userRole$.subscribe((role) => {
         roleChanges++;
         if (roleChanges === 1) {
-          expect(role).toBe('User'); // Estado inicial
+          expect(role).toBe('User');
         } else if (roleChanges === 2) {
-          expect(role).toBe('Admin'); // Después del login
+          expect(role).toBe('Admin');
           done();
         }
       });
@@ -313,8 +309,8 @@ describe('AuthService', () => {
           NombrePerfil: 'Admin',
           Identificacion: '12345678',
           Correo: 'admin@test.com',
-          Nombre: 'Test Admin'
-        }
+          Nombre: 'Test Admin',
+        },
       };
 
       service.login('admin@test.com', 'password123').subscribe();
@@ -324,4 +320,3 @@ describe('AuthService', () => {
     });
   });
 });
-
